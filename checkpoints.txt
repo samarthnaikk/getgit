@@ -7,3 +7,4 @@
 3. Check if logging is configured
 4. Check if requirements.txt exists
 5. Check if the project uses Flask for web interface
+6. Check if the project has unit tests
