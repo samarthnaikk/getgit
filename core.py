@@ -20,6 +20,13 @@ from rag import (
     RAGConfig,
     generate_response,
 )
+from checkpoints import (
+    load_checkpoints,
+    evaluate_checkpoint,
+    run_checkpoints,
+    format_results_summary,
+    CheckpointResult
+)
 
 
 # Configure logging
@@ -263,6 +270,124 @@ def answer_query(
     
     except Exception as e:
         logger.error(f"Failed to process query: {str(e)}")
+        raise
+
+
+def validate_checkpoints(
+    repo_url: str,
+    checkpoints_file: str = "checkpoints.txt",
+    local_path: str = "source_repo",
+    use_llm: bool = True,
+    log_level: str = "INFO",
+    config: Optional[RAGConfig] = None,
+    stop_on_failure: bool = False
+) -> Dict[str, Any]:
+    """
+    Validate repository against checkpoints defined in a text file.
+    
+    This function orchestrates the checkpoint validation pipeline:
+    1. Repository cloning/loading
+    2. RAG initialization and indexing
+    3. Loading checkpoints from file
+    4. Sequential checkpoint evaluation
+    5. Results aggregation and reporting
+    
+    Args:
+        repo_url: GitHub repository URL
+        checkpoints_file: Path to checkpoints text file
+        local_path: Local path for repository storage
+        use_llm: Whether to use LLM for checkpoint evaluation
+        log_level: Logging level (DEBUG, INFO, WARNING, ERROR)
+        config: Optional RAG configuration
+        stop_on_failure: Stop processing on first checkpoint failure
+    
+    Returns:
+        Dictionary containing:
+            - checkpoints: List of checkpoint strings
+            - results: List of CheckpointResult objects
+            - summary: Formatted summary string
+            - passed_count: Number of passed checkpoints
+            - total_count: Total number of checkpoints
+            - pass_rate: Percentage of passed checkpoints
+    
+    Raises:
+        FileNotFoundError: If checkpoints file doesn't exist
+        Exception: If any step of the pipeline fails
+    
+    Example:
+        >>> result = validate_checkpoints(
+        ...     repo_url="https://github.com/user/repo.git",
+        ...     checkpoints_file="checkpoints.txt",
+        ...     use_llm=True
+        ... )
+        >>> print(result['summary'])
+    """
+    # Setup logging
+    global logger
+    logger = setup_logging(log_level)
+    
+    logger.info("="*70)
+    logger.info("GetGit Checkpoint Validation Pipeline Starting")
+    logger.info("="*70)
+    logger.info(f"Repository: {repo_url}")
+    logger.info(f"Checkpoints File: {checkpoints_file}")
+    logger.info(f"LLM Enabled: {use_llm}")
+    logger.info("="*70)
+    
+    try:
+        # Step 1: Initialize repository
+        logger.info("\n[1/4] Initializing repository...")
+        repo_path = initialize_repository(repo_url, local_path)
+        logger.info(f"✓ Repository ready at {repo_path}")
+        
+        # Step 2: Setup RAG pipeline
+        logger.info("\n[2/4] Setting up RAG pipeline...")
+        retriever = setup_rag(repo_path, config=config)
+        logger.info(f"✓ RAG pipeline ready with {len(retriever)} indexed chunks")
+        
+        # Step 3: Load checkpoints
+        logger.info("\n[3/4] Loading checkpoints...")
+        checkpoints = load_checkpoints(checkpoints_file)
+        logger.info(f"✓ Loaded {len(checkpoints)} checkpoints")
+        
+        # Step 4: Run checkpoints
+        logger.info("\n[4/4] Running checkpoint validation...")
+        results = run_checkpoints(
+            checkpoints=checkpoints,
+            repo_path=repo_path,
+            retriever=retriever,
+            use_llm=use_llm,
+            stop_on_failure=stop_on_failure
+        )
+        logger.info("✓ Checkpoint validation completed")
+        
+        # Generate summary
+        summary = format_results_summary(results)
+        
+        # Calculate statistics
+        passed_count = sum(1 for r in results if r.passed)
+        total_count = len(results)
+        pass_rate = (passed_count / total_count * 100) if total_count > 0 else 0
+        
+        logger.info("\n" + "="*70)
+        logger.info("GetGit Checkpoint Validation Pipeline Completed")
+        logger.info(f"Results: {passed_count}/{total_count} passed ({pass_rate:.1f}%)")
+        logger.info("="*70)
+        
+        return {
+            'checkpoints': checkpoints,
+            'results': results,
+            'summary': summary,
+            'passed_count': passed_count,
+            'total_count': total_count,
+            'pass_rate': pass_rate
+        }
+    
+    except Exception as e:
+        logger.error("\n" + "="*70)
+        logger.error("GetGit Checkpoint Validation Pipeline Failed")
+        logger.error(f"Error: {str(e)}")
+        logger.error("="*70)
         raise
 
 
