@@ -120,10 +120,7 @@ for result in results:
     print(f"[{result.rank}] {result.chunk.file_path} (score: {result.score:.4f})")
 ```
 
-For a complete example, run:
-```bash
-python example_rag_usage.py
-```
+For complete examples, see `example_core_usage.py` or refer to `documentation.md` for detailed usage.
 
 ### LLM-Based Response Generation
 
@@ -164,10 +161,7 @@ The LLM connector uses Google Gemini by default. To use it, you need to set up y
    export GEMINI_API_KEY=your_api_key_here
    ```
 
-For a complete example with LLM integration, run:
-```bash
-python example_llm_rag.py
-```
+For complete examples with LLM integration, see `example_core_usage.py` or refer to `documentation.md` for detailed usage.
 
 ## Requirements
 
