@@ -120,8 +120,6 @@ For a complete example, run:
 python example_rag_usage.py
 ```
 
-For detailed RAG module documentation, see [rag/README.md](rag/README.md).
-
 ## Requirements
 
 ### Core Dependencies

@@ -33,14 +33,14 @@ def main():
     if not os.path.exists(repo_path):
         print(f"\n1. Cloning repository from {repo_url}...")
         clone_repo(repo_url, repo_path)
-        print(f"   ✓ Repository cloned to {repo_path}")
+        print(f"   > Repository cloned to {repo_path}")
     else:
         print(f"\n1. Using existing repository at {repo_path}")
     
     # Step 2: Initialize RAG configuration
     print("\n2. Initializing RAG configuration...")
     config = RAGConfig.default()
-    print(f"   ✓ Configuration loaded")
+    print(f"   > Configuration loaded")
     print(f"   - File patterns: {config.chunking.file_patterns}")
     print(f"   - Embedding model: {config.embedding.model_type}")
     
@@ -48,7 +48,7 @@ def main():
     print("\n3. Chunking repository content...")
     chunker = RepositoryChunker(repo_path, repository_name="getgit")
     chunks = chunker.chunk_repository(config.chunking.file_patterns)
-    print(f"   ✓ Created {len(chunks)} chunks")
+    print(f"   > Created {len(chunks)} chunks")
     
     # Display sample chunks
     if chunks:
@@ -65,19 +65,19 @@ def main():
         try:
             from rag import SentenceTransformerEmbedding
             embedding_model = SentenceTransformerEmbedding(config.embedding.model_name)
-            print(f"   ✓ Using SentenceTransformer: {config.embedding.model_name}")
+            print(f"   > Using SentenceTransformer: {config.embedding.model_name}")
         except ImportError:
-            print("   ⚠ sentence-transformers not available, falling back to SimpleEmbedding")
+            print("   ! sentence-transformers not available, falling back to SimpleEmbedding")
             embedding_model = SimpleEmbedding(max_features=config.embedding.embedding_dim)
     else:
         embedding_model = SimpleEmbedding(max_features=config.embedding.embedding_dim)
-        print(f"   ✓ Using SimpleEmbedding (TF-IDF based)")
+        print(f"   > Using SimpleEmbedding (TF-IDF based)")
     
     # Step 5: Create retriever and index chunks
     print("\n5. Creating retriever and indexing chunks...")
     retriever = Retriever(embedding_model)
     retriever.index_chunks(chunks, batch_size=config.embedding.batch_size)
-    print(f"   ✓ Indexed {len(retriever)} chunks")
+    print(f"   > Indexed {len(retriever)} chunks")
     
     # Step 6: Perform sample queries
     print("\n6. Performing sample queries...")
@@ -119,7 +119,7 @@ def main():
     os.makedirs(cache_dir, exist_ok=True)
     retriever_path = os.path.join(cache_dir, "retriever.pkl")
     retriever.save(retriever_path)
-    print(f"   ✓ Retriever saved to {retriever_path}")
+    print(f"   > Retriever saved to {retriever_path}")
     
     print("\n" + "=" * 70)
     print("Example completed successfully!")

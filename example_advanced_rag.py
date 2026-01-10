@@ -47,7 +47,7 @@ class RepositoryQnA:
             )
         
         self.retriever.index_chunks(chunks)
-        print(f"✓ Indexed {len(self.retriever)} chunks")
+        print(f"> Indexed {len(self.retriever)} chunks")
     
     def ask(self, question: str, top_k: int = 3) -> Dict:
         """
@@ -209,33 +209,33 @@ class RepositoryReview:
         # Check documentation
         if not review['documentation']['has_readme']:
             recommendations.append(
-                "❗ Add a README.md file to document the project"
+                "! Add a README.md file to document the project"
             )
         elif review['documentation']['readme_sections'] < 5:
             recommendations.append(
-                "ℹ️ Consider expanding README documentation with more sections"
+                "i Consider expanding README documentation with more sections"
             )
         
         # Check code structure
         if review['code_analysis']['functions'] == 0:
             recommendations.append(
-                "ℹ️ No functions detected - consider organizing code into functions"
+                "i No functions detected - consider organizing code into functions"
             )
         
         if review['code_analysis']['avg_function_lines'] > 50:
             recommendations.append(
-                f"⚠️ Average function length is {review['code_analysis']['avg_function_lines']} lines. "
+                f"! Average function length is {review['code_analysis']['avg_function_lines']} lines. "
                 "Consider breaking down large functions."
             )
         
         # Check file diversity
         if len(review['structure']['file_types']) == 1:
             recommendations.append(
-                "ℹ️ Repository contains only one file type - consider adding documentation"
+                "i Repository contains only one file type - consider adding documentation"
             )
         
         if not recommendations:
-            recommendations.append("✅ Repository structure looks good!")
+            recommendations.append("> Repository structure looks good!")
         
         return recommendations
     
@@ -247,27 +247,27 @@ class RepositoryReview:
         output.append(f"{'='*70}\n")
         
         # Structure
-        output.append("📁 Repository Structure")
+        output.append("Repository Structure")
         output.append(f"  Total Files: {review['structure']['total_files']}")
         output.append(f"  File Types:")
         for ext, count in sorted(review['structure']['file_types'].items()):
             output.append(f"    {ext}: {count} file(s)")
         
         # Code Analysis
-        output.append(f"\n💻 Code Analysis")
+        output.append(f"\nCode Analysis")
         output.append(f"  Total Code Chunks: {review['code_analysis']['total_code_chunks']}")
         output.append(f"  Functions: {review['code_analysis']['functions']}")
         output.append(f"  Classes: {review['code_analysis']['classes']}")
         output.append(f"  Avg Function Length: {review['code_analysis']['avg_function_lines']} lines")
         
         # Documentation
-        output.append(f"\n📝 Documentation")
+        output.append(f"\nDocumentation")
         output.append(f"  Total Doc Chunks: {review['documentation']['total_doc_chunks']}")
         output.append(f"  README Sections: {review['documentation']['readme_sections']}")
-        output.append(f"  Has README: {'Yes ✓' if review['documentation']['has_readme'] else 'No ✗'}")
+        output.append(f"  Has README: {'Yes' if review['documentation']['has_readme'] else 'No'}")
         
         # Recommendations
-        output.append(f"\n💡 Recommendations")
+        output.append(f"\nRecommendations")
         for rec in review['recommendations']:
             output.append(f"  {rec}")
         
@@ -299,7 +299,7 @@ def demo_qna():
             result = qna.ask(question, top_k=2)
             print(qna.format_answer(result))
     except ValueError as e:
-        print(f"\n⚠️ Could not initialize QnA system: {e}")
+        print(f"\n! Could not initialize QnA system: {e}")
         print("Tip: Make sure you're running from a directory with supported files.")
 
 
@@ -316,14 +316,14 @@ def demo_review():
         reviewer = RepositoryReview(repo_path, repo_name="getgit")
         
         if len(reviewer.chunks) == 0:
-            print("\n⚠️ No chunks found in repository.")
+            print("\n! No chunks found in repository.")
             print("Tip: Make sure you're running from a directory with supported files.")
             return
         
         review = reviewer.generate_review()
         print(reviewer.format_review(review))
     except Exception as e:
-        print(f"\n⚠️ Could not generate review: {e}")
+        print(f"\n! Could not generate review: {e}")
 
 
 def main():
