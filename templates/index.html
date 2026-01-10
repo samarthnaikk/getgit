@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitHub Repo Link Input</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Enter GitHub Repository Link</h1>
+        <form method="POST">
+            <input type="text" name="repo_link" placeholder="https://github.com/user/repo" required>
+            <button type="submit">Submit</button>
+        </form>
+        {% if repo_link %}
+        <div class="result">
+            <p>You entered: <span>{{ repo_link }}</span></p>
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html>
