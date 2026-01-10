@@ -4,14 +4,14 @@
 
 1. [Project Overview](#project-overview)
 2. [Architecture](#architecture)
-3. [Installation](#installation)
-4. [Dependencies](#dependencies)
-5. [Basic Usage](#basic-usage)
-6. [Configuration](#configuration)
-7. [Logging](#logging)
-8. [API Reference](#api-reference)
-9. [Contributing](#contributing)
-10. [Roadmap](#roadmap)
+3. [Backend Flow](#backend-flow)
+4. [RAG + LLM Overview](#rag--llm-overview)
+5. [Checkpoints System](#checkpoints-system)
+6. [UI Interaction Flow](#ui-interaction-flow)
+7. [Setup and Run Instructions](#setup-and-run-instructions)
+8. [Logging Behavior](#logging-behavior)
+9. [API Reference](#api-reference)
+10. [Configuration](#configuration)
 
 ---
 
@@ -24,8 +24,9 @@ GetGit is a Python-based repository intelligence system that combines GitHub rep
 - **Automated Repository Cloning**: Clone and manage GitHub repositories locally
 - **RAG-Based Analysis**: Semantic chunking and retrieval of repository content
 - **LLM Integration**: Natural language response generation using Google Gemini
-- **Unified Pipeline**: Single entry point (`core.py`) orchestrating all components
+- **Checkpoint Validation**: Programmatic validation of repository requirements
 - **Web Interface**: Flask-based UI for repository exploration
+- **Checkpoint Management**: UI for adding and viewing validation checkpoints
 
 ### Use Cases
 
@@ -33,13 +34,49 @@ GetGit is a Python-based repository intelligence system that combines GitHub rep
 - Answering questions about project structure and functionality
 - Extracting information from documentation and code
 - Repository analysis and review
+- Validating repository requirements for hackathons or project submissions
 - Team collaboration and onboarding
 
 ---
 
 ## Architecture
 
-GetGit follows a modular architecture with three main layers:
+GetGit follows a modular architecture with clear separation of concerns:
+
+### System Components
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                       Web Browser                            │
+│                    (User Interface)                          │
+└────────────────────┬────────────────────────────────────────┘
+                     │ HTTP Requests
+                     ▼
+┌─────────────────────────────────────────────────────────────┐
+│                    server.py (Flask)                         │
+│  - Routes: /initialize, /ask, /checkpoints, etc.            │
+│  - Session management                                        │
+│  - Request/response handling                                 │
+└────────────────────┬────────────────────────────────────────┘
+                     │ Delegates to
+                     ▼
+┌─────────────────────────────────────────────────────────────┐
+│                    core.py (Orchestration)                   │
+│  - initialize_repository()                                   │
+│  - setup_rag()                                              │
+│  - answer_query()                                           │
+│  - validate_checkpoints()                                   │
+└────────┬───────────────────┬─────────────────┬──────────────┘
+         │                   │                 │
+         ▼                   ▼                 ▼
+┌─────────────────┐  ┌──────────────┐  ┌─────────────────────┐
+│  clone_repo.py  │  │   rag/       │  │  checkpoints.py     │
+│  - Repository   │  │  - Chunker   │  │  - Load/validate    │
+│    cloning      │  │  - Embedder  │  │  - Checkpoint mgmt  │
+└─────────────────┘  │  - Retriever │  └─────────────────────┘
+                     │  - LLM       │
+                     └──────────────┘
+```
 
 ### 1. Repository Layer (`clone_repo.py`)
 
@@ -58,6 +95,7 @@ Provides semantic search and context retrieval capabilities.
 - **Chunker** (`chunker.py`): Splits repository files into semantic chunks
 - **Embedder** (`embedder.py`): Creates vector embeddings (TF-IDF or Transformer-based)
 - **Retriever** (`retriever.py`): Performs similarity-based chunk retrieval
+- **LLM Connector** (`llm_connector.py`): Integrates with LLMs for response generation
 - **Configuration** (`config.py`): Manages RAG settings and parameters
 
 **Supported Chunk Types:**
@@ -67,13 +105,15 @@ Provides semantic search and context retrieval capabilities.
 - Configuration files
 - Full file content
 
-### 3. LLM Layer (`rag/llm_connector.py`)
+### 3. Checkpoints Layer (`checkpoints.py`)
 
-Integrates with Large Language Models for natural language response generation.
+Manages checkpoint-based validation of repositories.
 
-**Provider Support:**
-- Google Gemini (default: `gemini-2.0-flash-exp`)
-- Extensible design for additional providers
+**Key Functions:**
+- `load_checkpoints()`: Load checkpoints from file
+- `evaluate_checkpoint()`: Evaluate a single checkpoint
+- `run_checkpoints()`: Run all checkpoints against repository
+- `format_results_summary()`: Format results for display
 
 ### 4. Orchestration Layer (`core.py`)
 
@@ -82,14 +122,213 @@ Unified entry point that coordinates all components:
 1. **Repository Initialization**: Clone or load repository
 2. **RAG Setup**: Chunk, embed, and index repository content
 3. **Query Processing**: Retrieve context and generate responses
+4. **Checkpoint Validation**: Validate repository against requirements
 
 ### 5. Web Interface (`server.py`)
 
-Flask-based web application providing a user-friendly interface for repository exploration.
+Flask-based web application providing a user-friendly interface.
+
+**Routes:**
+- `GET /` - Render home page
+- `POST /initialize` - Initialize repository and RAG pipeline
+- `POST /ask` - Answer questions about repository
+- `POST /checkpoints` - Run checkpoint validation
+- `GET /checkpoints/list` - List all checkpoints
+- `POST /checkpoints/add` - Add new checkpoint
+- `GET /status` - Get application status
 
 ---
 
-## Installation
+## Backend Flow
+
+### Server.py → Core.py Flow
+
+```
+User Request → server.py → core.py → Specialized Modules
+```
+
+#### 1. Repository Initialization Flow
+
+```
+POST /initialize
+  ↓
+server.py: initialize()
+  ↓
+core.py: initialize_repository(repo_url, local_path)
+  ↓
+clone_repo.py: clone_repo(repo_url, local_path)
+  ↓
+core.py: setup_rag(repo_path)
+  ↓
+rag/chunker.py: chunk_repository()
+  ↓
+rag/embedder.py: create embeddings
+  ↓
+rag/retriever.py: index_chunks()
+  ↓
+Return: Retriever instance with indexed chunks
+```
+
+#### 2. Question Answering Flow
+
+```
+POST /ask
+  ↓
+server.py: ask_question()
+  ↓
+core.py: answer_query(query, retriever, use_llm)
+  ↓
+rag/retriever.py: retrieve(query, top_k)
+  ↓
+[If use_llm=True]
+  ↓
+rag/llm_connector.py: generate_response(query, context)
+  ↓
+Return: {query, retrieved_chunks, context, response, error}
+```
+
+#### 3. Checkpoint Validation Flow
+
+```
+POST /checkpoints
+  ↓
+server.py: run_checkpoints()
+  ↓
+core.py: validate_checkpoints(repo_url, checkpoints_file, use_llm)
+  ↓
+checkpoints.py: load_checkpoints(file)
+  ↓
+checkpoints.py: run_checkpoints(checkpoints, repo_path, retriever)
+  ↓
+[For each checkpoint]
+  ↓
+checkpoints.py: evaluate_checkpoint(checkpoint, retriever, use_llm)
+  ↓
+Return: {checkpoints, results, summary, statistics}
+```
+
+---
+
+## RAG + LLM Overview
+
+### Retrieval-Augmented Generation (RAG)
+
+RAG combines information retrieval with text generation to provide contextually accurate responses.
+
+**How It Works:**
+
+1. **Indexing Phase** (Setup):
+   - Repository files are chunked into semantic units
+   - Each chunk is converted to a vector embedding
+   - Embeddings are indexed for fast similarity search
+
+2. **Retrieval Phase** (Query):
+   - User query is converted to embedding
+   - Similar chunks are retrieved using cosine similarity
+   - Top-k most relevant chunks are selected
+
+3. **Generation Phase** (Optional, if LLM enabled):
+   - Retrieved chunks provide context
+   - Context + query sent to LLM
+   - LLM generates coherent, contextual response
+
+### LLM Integration
+
+GetGit uses Google Gemini for natural language response generation.
+
+**Features:**
+- Provider-agnostic design (easy to add new LLM providers)
+- Environment-based API key management
+- Error handling and fallback to context-only responses
+- Configurable model selection
+
+**Configuration:**
+```bash
+export GEMINI_API_KEY=your_api_key_here
+```
+
+---
+
+## Checkpoints System
+
+The checkpoints system enables programmatic validation of repository requirements.
+
+### How Checkpoints Work
+
+1. **Definition**: Checkpoints are stored in `checkpoints.txt`, one per line
+2. **Loading**: System reads and parses checkpoint file
+3. **Evaluation**: Each checkpoint is evaluated against the repository
+4. **Reporting**: Results include pass/fail status, explanation, and evidence
+
+### Checkpoint Types
+
+1. **File Existence Checks**: Simple file/directory existence validation
+   - Example: "Check if the repository has README.md"
+
+2. **Semantic Checks**: Complex requirements using RAG retrieval
+   - Example: "Check if RAG model is implemented"
+
+3. **LLM-Enhanced Checks**: Uses LLM reasoning for complex validation
+   - Example: "Check if proper error handling is implemented"
+
+### Checkpoints File Format
+
+```
+# Comments start with #
+1. Check if the repository has README.md
+2. Check if RAG model is implemented
+3. Check if logging is configured
+Check if requirements.txt exists  # Numbering is optional
+```
+
+### Managing Checkpoints via UI
+
+The web interface provides checkpoint management:
+- **View Checkpoints**: Load and display all checkpoints from file
+- **Add Checkpoint**: Add new checkpoints via UI
+- **Persistence**: All checkpoints saved to `checkpoints.txt`
+- **Server Restart**: Checkpoints persist across server restarts
+
+---
+
+## UI Interaction Flow
+
+### User Journey
+
+1. **Initialize Repository**
+   - User enters GitHub repository URL
+   - Clicks "Initialize Repository"
+   - Backend clones repository and indexes content
+   - UI displays success message and chunk count
+
+2. **Manage Checkpoints**
+   - User can add new checkpoint requirements
+   - User can view existing checkpoints
+   - Checkpoints saved to `checkpoints.txt`
+   - Available for validation
+
+3. **Ask Questions**
+   - User enters natural language question
+   - Optionally enables LLM for enhanced responses
+   - Backend retrieves relevant code chunks
+   - UI displays answer and source chunks
+
+4. **Run Validation**
+   - User triggers checkpoint validation
+   - Backend evaluates all checkpoints
+   - UI displays pass/fail results with explanations
+
+### UI Components
+
+- **Status Messages**: Success, error, and info notifications
+- **Loading Indicators**: Spinner during processing
+- **Result Boxes**: Formatted display of results
+- **Checkpoint List**: Scrollable list of checkpoints
+- **Forms**: Input fields for URLs, questions, checkpoints
+
+---
+
+## Setup and Run Instructions
 
 ### Prerequisites
 
@@ -97,9 +336,9 @@ Flask-based web application providing a user-friendly interface for repository e
 - pip package manager
 - Git (for repository cloning)
 
-### Installation Steps
+### Installation
 
-1. **Clone the GetGit repository:**
+1. **Clone GetGit repository:**
    ```bash
    git clone https://github.com/samarthnaikk/getgit.git
    cd getgit
@@ -110,239 +349,39 @@ Flask-based web application providing a user-friendly interface for repository e
    pip install -r requirements.txt
    ```
 
-3. **Verify installation:**
+3. **Set up environment variables (optional):**
    ```bash
-   python core.py --help
+   # For LLM-powered responses
+   export GEMINI_API_KEY=your_api_key_here
+   
+   # For production deployment
+   export FLASK_SECRET_KEY=your_secret_key_here
    ```
 
----
+### Running the Application
 
-## Dependencies
-
-### Core Dependencies (Required)
-
-- **GitPython**: Repository cloning and Git operations
-- **numpy >= 1.20.0**: Numerical computations for embeddings
-- **scikit-learn >= 0.24.0**: TF-IDF embeddings and similarity calculations
-- **Flask >= 2.0.0**: Web interface
-
-### Optional Dependencies
-
-- **sentence-transformers >= 2.0.0**: Advanced semantic embeddings (recommended for better retrieval quality)
-- **google-generativeai >= 0.3.0**: LLM-based response generation with Google Gemini
-- **python-dotenv >= 0.19.0**: Environment variable management for API keys
-
-### Installing Optional Dependencies
-
-All dependencies (core + optional) are included in `requirements.txt`:
-
+**Development Mode:**
 ```bash
-pip install -r requirements.txt
+FLASK_ENV=development python server.py
 ```
 
-For minimal installation (without LLM support):
+**Production Mode:**
 ```bash
-pip install GitPython numpy>=1.20.0 scikit-learn>=0.24.0 Flask>=2.0.0
+python server.py
+```
+
+The server will start on `http://0.0.0.0:5000`
+
+### Accessing the UI
+
+Open your web browser and navigate to:
+```
+http://localhost:5000
 ```
 
 ---
 
-## Basic Usage
-
-### Using the Core Module
-
-The `core.py` module is the primary interface for GetGit functionality.
-
-#### 1. Simple Query (Python API)
-
-```python
-from core import main
-
-# Analyze a repository and answer a question
-result = main(
-    repo_url="https://github.com/username/repository.git",
-    query="How do I install this project?",
-    use_llm=False  # Set to True if GEMINI_API_KEY is configured
-)
-
-# Access results
-print(result['response'])
-for chunk in result['retrieved_chunks']:
-    print(f"- {chunk['file_path']} (score: {chunk['score']:.3f})")
-```
-
-#### 2. Command-Line Usage
-
-```bash
-# Basic usage with default settings
-python core.py https://github.com/username/repo.git "What is this project about?"
-
-# With custom repository path
-python core.py https://github.com/username/repo.git "How do I configure authentication?"
-```
-
-#### 3. Step-by-Step Control
-
-For more granular control over the pipeline:
-
-```python
-from core import initialize_repository, setup_rag, answer_query
-
-# Step 1: Clone/load repository
-repo_path = initialize_repository(
-    repo_url="https://github.com/username/repo.git",
-    local_path="my_repo"
-)
-
-# Step 2: Setup RAG pipeline
-retriever = setup_rag(repo_path)
-
-# Step 3: Process multiple queries
-queries = [
-    "What are the main features?",
-    "How do I run tests?",
-    "What dependencies are required?"
-]
-
-for query in queries:
-    result = answer_query(
-        query=query,
-        retriever=retriever,
-        use_llm=False
-    )
-    print(f"Q: {query}")
-    print(f"A: {result['retrieved_chunks'][0]['file_path']}\n")
-```
-
-### Using the RAG Module Directly
-
-For custom RAG workflows:
-
-```python
-from rag import RepositoryChunker, SimpleEmbedding, Retriever, RAGConfig
-
-# Initialize configuration
-config = RAGConfig.default()
-
-# Chunk repository
-chunker = RepositoryChunker('/path/to/repo', repository_name='my-repo')
-chunks = chunker.chunk_repository(config.chunking.file_patterns)
-
-# Create and index retriever
-embedding_model = SimpleEmbedding(max_features=384)
-retriever = Retriever(embedding_model)
-retriever.index_chunks(chunks)
-
-# Perform queries
-results = retriever.retrieve("authentication setup", top_k=5)
-for result in results:
-    print(f"{result.chunk.file_path}: {result.score:.4f}")
-```
-
-### Example Script
-
-A comprehensive usage example is provided in `example_core_usage.py`:
-
-```bash
-# Run interactive examples
-python example_core_usage.py
-
-# Run all examples non-interactively
-python example_core_usage.py --all
-```
-
----
-
-## Configuration
-
-### Environment Variables
-
-GetGit uses environment variables for sensitive configuration:
-
-#### LLM API Key (Optional)
-
-Required for LLM-based response generation:
-
-```bash
-export GEMINI_API_KEY=your_api_key_here
-```
-
-Or create a `.env` file in the project root:
-
-```
-GEMINI_API_KEY=your_api_key_here
-```
-
-**Getting a Gemini API Key:**
-1. Visit [Google AI Studio](https://makersuite.google.com/app/apikey)
-2. Create or sign in to your Google account
-3. Generate a new API key
-4. Set it as an environment variable or in `.env`
-
-### RAG Configuration
-
-RAG behavior can be customized using `RAGConfig`:
-
-```python
-from rag import RAGConfig
-
-# Use default configuration
-config = RAGConfig.default()
-
-# Use documentation-optimized configuration
-config = RAGConfig.for_documentation()
-
-# Custom configuration
-config = RAGConfig(
-    chunking=ChunkingConfig(
-        file_patterns=['*.py', '*.md', '*.txt'],
-        chunk_size=500,
-        chunk_overlap=50
-    ),
-    embedding=EmbeddingConfig(
-        model_type='sentence-transformer',
-        model_name='all-MiniLM-L6-v2',
-        embedding_dim=384
-    )
-)
-
-# Use in core module
-from core import main
-result = main(repo_url="...", query="...", config=config)
-```
-
-### Repository Storage
-
-By default, repositories are cloned to `source_repo/`:
-
-```python
-# Custom repository path
-from core import initialize_repository
-
-repo_path = initialize_repository(
-    repo_url="https://github.com/user/repo.git",
-    local_path="custom_path"
-)
-```
-
-### Retrieval Parameters
-
-Control number of context chunks retrieved:
-
-```python
-from core import answer_query
-
-result = answer_query(
-    query="How do I configure logging?",
-    retriever=retriever,
-    top_k=10,  # Retrieve top 10 chunks (default: 5)
-    use_llm=True
-)
-```
-
----
-
-## Logging
+## Logging Behavior
 
 GetGit uses Python's standard `logging` module for comprehensive activity tracking.
 
@@ -353,71 +392,47 @@ GetGit uses Python's standard `logging` module for comprehensive activity tracki
 - **WARNING**: Warning messages for unexpected situations
 - **ERROR**: Error messages for failures
 
-### Configuring Log Level
-
-#### Via Core Module
-
-```python
-from core import main
-
-result = main(
-    repo_url="...",
-    query="...",
-    log_level="DEBUG"  # Options: DEBUG, INFO, WARNING, ERROR
-)
-```
-
-#### Programmatically
-
-```python
-from core import setup_logging
-
-logger = setup_logging(level="DEBUG")
-logger.debug("This is a debug message")
-logger.info("This is an info message")
-```
-
 ### Log Format
 
-Logs follow this format:
 ```
-YYYY-MM-DD HH:MM:SS - getgit.core - LEVEL - Message
+YYYY-MM-DD HH:MM:SS - getgit.MODULE - LEVEL - Message
 ```
 
 Example:
 ```
 2026-01-10 12:34:56 - getgit.core - INFO - Initializing repository from https://github.com/user/repo.git
 2026-01-10 12:35:02 - getgit.core - INFO - Created 1247 chunks from repository
-2026-01-10 12:35:08 - getgit.core - INFO - Successfully indexed 1247 chunks
+2026-01-10 12:35:08 - getgit.server - INFO - Repository initialization completed successfully
 ```
 
-### Typical Log Output
+### Server Logs
 
-During a successful pipeline run:
+Server logs include:
+- Request processing
+- Route handling
+- Success/failure of operations
+- Error stack traces (when errors occur)
 
-1. **Repository Initialization**:
-   ```
-   INFO - Initializing repository from https://github.com/user/repo.git
-   INFO - Repository successfully cloned to source_repo
-   ```
+### Core Module Logs
 
-2. **RAG Setup**:
-   ```
-   INFO - Setting up RAG pipeline for repository at source_repo
-   INFO - Chunking repository content...
-   INFO - Created 850 chunks from repository
-   INFO - Using SimpleEmbedding (TF-IDF based)
-   INFO - Successfully indexed 850 chunks
-   ```
+Core module logs include:
+- Repository initialization progress
+- RAG pipeline setup stages
+- Query processing steps
+- Checkpoint validation progress
 
-3. **Query Processing**:
-   ```
-   INFO - Processing query: 'How do I configure authentication?'
-   INFO - Retrieving top 5 relevant chunks...
-   INFO - Retrieved 5 relevant chunks
-   INFO - Generating LLM response...
-   INFO - LLM response generated successfully
-   ```
+### Configuring Log Level
+
+**Via Environment:**
+```bash
+# Not directly supported, modify code or use Python logging config
+```
+
+**In Code:**
+```python
+from core import setup_logging
+logger = setup_logging(level="DEBUG")
+```
 
 ---
 
@@ -425,52 +440,19 @@ During a successful pipeline run:
 
 ### Core Module Functions
 
-#### `main(repo_url, query, local_path='source_repo', use_llm=True, top_k=5, log_level='INFO', config=None)`
-
-Orchestrates the full GetGit pipeline.
-
-**Parameters:**
-- `repo_url` (str): GitHub repository URL
-- `query` (str): Natural language question about the repository
-- `local_path` (str): Local path for repository storage (default: 'source_repo')
-- `use_llm` (bool): Whether to generate LLM responses (default: True)
-- `top_k` (int): Number of relevant chunks to retrieve (default: 5)
-- `log_level` (str): Logging level - DEBUG, INFO, WARNING, ERROR (default: 'INFO')
-- `config` (RAGConfig): Optional RAG configuration (default: None, uses default config)
-
-**Returns:**
-- Dictionary containing:
-  - `query`: The original query
-  - `retrieved_chunks`: List of retrieved chunk information
-  - `context`: Combined context from retrieved chunks
-  - `response`: Generated LLM response (if use_llm=True)
-  - `error`: Error message if LLM generation fails
-
-**Example:**
-```python
-result = main(
-    repo_url="https://github.com/user/repo.git",
-    query="What is this project about?",
-    use_llm=True,
-    log_level="INFO"
-)
-```
-
----
-
 #### `initialize_repository(repo_url, local_path='source_repo')`
 
-Clone or load a repository.
+Clone or load a repository and prepare it for analysis.
 
 **Parameters:**
 - `repo_url` (str): GitHub repository URL
 - `local_path` (str): Local path for repository storage
 
-**Returns:**
-- str: Path to the cloned/loaded repository
+**Returns:** str - Path to the cloned/loaded repository
 
 **Example:**
 ```python
+from core import initialize_repository
 repo_path = initialize_repository(
     repo_url="https://github.com/user/repo.git",
     local_path="my_repo"
@@ -485,19 +467,16 @@ Initialize RAG pipeline with chunking, embeddings, and retrieval.
 
 **Parameters:**
 - `repo_path` (str): Path to the repository
-- `repository_name` (str): Optional repository name (default: basename of repo_path)
-- `config` (RAGConfig): Optional RAG configuration (default: None, uses default config)
-- `use_sentence_transformer` (bool): Use SentenceTransformer embeddings (default: False)
+- `repository_name` (str, optional): Repository name
+- `config` (RAGConfig, optional): RAG configuration
+- `use_sentence_transformer` (bool): Use transformer embeddings
 
-**Returns:**
-- Retriever: Configured retriever instance with indexed chunks
+**Returns:** Retriever - Configured retriever instance
 
 **Example:**
 ```python
-retriever = setup_rag(
-    repo_path="source_repo",
-    use_sentence_transformer=True
-)
+from core import setup_rag
+retriever = setup_rag(repo_path="source_repo")
 ```
 
 ---
@@ -509,240 +488,233 @@ Retrieve context and generate response for a query.
 **Parameters:**
 - `query` (str): Natural language question
 - `retriever` (Retriever): Configured retriever instance
-- `top_k` (int): Number of chunks to retrieve (default: 5)
-- `use_llm` (bool): Whether to generate LLM response (default: True)
-- `api_key` (str): Optional API key (default: None, reads from environment)
-- `model_name` (str): LLM model name (default: 'gemini-2.0-flash-exp')
+- `top_k` (int): Number of chunks to retrieve
+- `use_llm` (bool): Whether to generate LLM response
+- `api_key` (str, optional): API key for LLM
+- `model_name` (str): LLM model name
 
-**Returns:**
-- Dictionary with query results (same structure as `main()`)
+**Returns:** dict - Query results with response and context
 
 **Example:**
 ```python
+from core import answer_query
 result = answer_query(
     query="How do I run tests?",
     retriever=retriever,
-    top_k=3,
-    use_llm=False
+    top_k=5,
+    use_llm=True
 )
 ```
 
 ---
 
-### RAG Module
+#### `validate_checkpoints(repo_url, checkpoints_file='checkpoints.txt', local_path='source_repo', use_llm=True, log_level='INFO', config=None, stop_on_failure=False)`
 
-#### `RepositoryChunker(repo_path, repository_name='')`
-
-Chunks repository files into semantic units.
-
-**Methods:**
-- `chunk_repository(file_patterns)`: Chunk files matching patterns
-
-**Example:**
-```python
-from rag import RepositoryChunker, RAGConfig
-
-config = RAGConfig.default()
-chunker = RepositoryChunker('/path/to/repo', repository_name='my-repo')
-chunks = chunker.chunk_repository(config.chunking.file_patterns)
-```
-
----
-
-#### `Retriever(embedding_model)`
-
-Performs similarity-based retrieval of chunks.
-
-**Methods:**
-- `index_chunks(chunks, batch_size=32)`: Index chunks for retrieval
-- `retrieve(query, top_k=5)`: Retrieve top-k relevant chunks
-- `save(path)`: Save retriever state to disk
-- `load(path)`: Load retriever state from disk
-
-**Example:**
-```python
-from rag import Retriever, SimpleEmbedding
-
-embedding_model = SimpleEmbedding(max_features=384)
-retriever = Retriever(embedding_model)
-retriever.index_chunks(chunks)
-
-results = retriever.retrieve("authentication", top_k=5)
-```
-
----
-
-#### `generate_response(query, context_chunks, model_name='gemini-2.0-flash-exp', api_key=None)`
-
-Generate LLM response using retrieved context.
+Validate repository against checkpoints defined in a text file.
 
 **Parameters:**
-- `query` (str): User query
-- `context_chunks` (List[str]): Retrieved context chunks
-- `model_name` (str): LLM model name
-- `api_key` (str): API key (reads from environment if not provided)
+- `repo_url` (str): GitHub repository URL
+- `checkpoints_file` (str): Path to checkpoints file
+- `local_path` (str): Local repository storage path
+- `use_llm` (bool): Use LLM for evaluation
+- `log_level` (str): Logging level
+- `config` (RAGConfig, optional): RAG configuration
+- `stop_on_failure` (bool): Stop on first failure
 
-**Returns:**
-- str: Generated response
+**Returns:** dict - Validation results with statistics
 
 **Example:**
 ```python
-from rag import generate_response
-
-response = generate_response(
-    query="How do I install this?",
-    context_chunks=[chunk.content for chunk in results]
+from core import validate_checkpoints
+result = validate_checkpoints(
+    repo_url="https://github.com/user/repo.git",
+    checkpoints_file="checkpoints.txt",
+    use_llm=True
 )
+print(result['summary'])
 ```
 
 ---
 
-## Contributing
+### Flask API Endpoints
 
-We welcome contributions to GetGit! Please follow these guidelines:
+#### `POST /initialize`
 
-### Code Style
+Initialize repository and setup RAG pipeline.
 
-- Follow PEP 8 Python style guidelines
-- Use meaningful variable and function names
-- Add docstrings to all public functions and classes
-- Keep functions focused and modular
+**Request Body:**
+```json
+{
+  "repo_url": "https://github.com/user/repo.git"
+}
+```
 
-### Development Workflow
-
-1. **Fork the repository** on GitHub
-
-2. **Clone your fork:**
-   ```bash
-   git clone https://github.com/your-username/getgit.git
-   cd getgit
-   ```
-
-3. **Create a feature branch:**
-   ```bash
-   git checkout -b feature/your-feature-name
-   ```
-
-4. **Make your changes** and test thoroughly
-
-5. **Commit with clear messages:**
-   ```bash
-   git commit -m "Add feature: description of your changes"
-   ```
-
-6. **Push to your fork:**
-   ```bash
-   git push origin feature/your-feature-name
-   ```
-
-7. **Create a Pull Request** on GitHub
-
-### Testing
-
-Before submitting a pull request:
-
-1. Test your changes with multiple repositories
-2. Verify both RAG-only and RAG+LLM workflows
-3. Check for edge cases and error handling
-4. Ensure logging is appropriate and informative
-
-### Documentation
-
-- Update README.md if you add user-facing features
-- Update this documentation.md for technical changes
-- Add docstrings and comments for complex logic
-- Include usage examples for new functionality
-
-### Areas for Contribution
-
-- Additional LLM provider integrations (OpenAI, Anthropic, etc.)
-- Enhanced chunking strategies for different file types
-- Performance optimizations for large repositories
-- Web interface improvements
-- Test coverage and test infrastructure
-- Documentation and examples
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Repository initialized successfully with 850 chunks",
+  "repo_path": "source_repo",
+  "chunks_count": 850
+}
+```
 
 ---
 
-## Roadmap
+#### `POST /ask`
 
-GetGit is under active development. Planned features and improvements:
+Answer questions about the repository.
 
-### Short-term (Next Release)
+**Request Body:**
+```json
+{
+  "query": "What is this project about?",
+  "use_llm": true
+}
+```
 
-- **Enhanced Web Interface**
-  - Interactive query interface
-  - Repository management dashboard
-  - Visual representation of retrieval results
-
-- **Additional LLM Providers**
-  - OpenAI GPT integration
-  - Anthropic Claude integration
-  - Local model support (Ollama, LLaMA)
-
-- **Improved Chunking**
-  - Language-specific code parsing
-  - Smart function/class boundary detection
-  - Configuration file semantic understanding
-
-### Medium-term
-
-- **Multi-Repository Analysis**
-  - Track and query across multiple repositories simultaneously
-  - Cross-repository search and comparison
-  - Unified bookmarking and milestone tracking
-
-- **Repository Review System**
-  - Automated code quality analysis
-  - Documentation completeness checking
-  - Security vulnerability scanning
-  - Best practices compliance reporting
-
-- **Caching and Performance**
-  - Persistent chunk and embedding storage
-  - Incremental repository updates
-  - Query result caching
-  - Parallel processing for large repositories
-
-### Long-term
-
-- **Advanced QnA Capabilities**
-  - Multi-turn conversational queries
-  - Context-aware follow-up questions
-  - Query history and session management
-  - Personalized query responses
-
-- **Team Collaboration Features**
-  - Shared repository intelligence
-  - Team annotations and bookmarks
-  - Collaborative code review
-  - Knowledge base building
-
-- **Integration and Ecosystem**
-  - GitHub App/Action integration
-  - VS Code extension
-  - Slack/Discord bot
-  - API for third-party integrations
-
-### Community-Driven
-
-We encourage the community to suggest and contribute features. Please:
-
-- Open issues for feature requests
-- Participate in design discussions
-- Submit pull requests for implementations
-- Share feedback on existing features
+**Response:**
+```json
+{
+  "success": true,
+  "query": "What is this project about?",
+  "response": "This project is a repository intelligence system...",
+  "retrieved_chunks": [...],
+  "context": "...",
+  "error": null
+}
+```
 
 ---
 
-## Support and Resources
+#### `POST /checkpoints`
 
-- **Repository**: [https://github.com/samarthnaikk/getgit](https://github.com/samarthnaikk/getgit)
-- **Issues**: [https://github.com/samarthnaikk/getgit/issues](https://github.com/samarthnaikk/getgit/issues)
-- **License**: MIT License (see LICENSE file)
+Run checkpoint validation.
 
-For questions, bug reports, or feature requests, please open an issue on GitHub.
+**Request Body:**
+```json
+{
+  "checkpoints_file": "checkpoints.txt",
+  "use_llm": true
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "checkpoints": ["Check if README exists", ...],
+  "results": [{
+    "checkpoint": "Check if README exists",
+    "passed": true,
+    "explanation": "...",
+    "evidence": "...",
+    "score": 1.0
+  }],
+  "summary": "...",
+  "passed_count": 4,
+  "total_count": 5,
+  "pass_rate": 80.0
+}
+```
+
+---
+
+#### `GET /checkpoints/list`
+
+List all checkpoints from checkpoints.txt.
+
+**Response:**
+```json
+{
+  "success": true,
+  "checkpoints": [
+    "Check if the repository has README.md",
+    "Check if RAG model is implemented"
+  ]
+}
+```
+
+---
+
+#### `POST /checkpoints/add`
+
+Add a new checkpoint to checkpoints.txt.
+
+**Request Body:**
+```json
+{
+  "checkpoint": "Check if tests are present"
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Checkpoint added successfully",
+  "checkpoints": [...]
+}
+```
+
+---
+
+#### `GET /status`
+
+Get current application status.
+
+**Response:**
+```json
+{
+  "initialized": true,
+  "repo_url": "https://github.com/user/repo.git",
+  "chunks_count": 850
+}
+```
+
+---
+
+## Configuration
+
+### Environment Variables
+
+- **GEMINI_API_KEY**: API key for Google Gemini LLM (optional)
+- **FLASK_SECRET_KEY**: Secret key for Flask sessions (required for production)
+- **FLASK_ENV**: Set to `development` for debug mode
+
+### RAG Configuration
+
+```python
+from rag import RAGConfig
+
+# Use default configuration
+config = RAGConfig.default()
+
+# Use documentation-optimized configuration
+config = RAGConfig.for_documentation()
+
+# Custom configuration
+from rag import ChunkingConfig, EmbeddingConfig
+
+config = RAGConfig(
+    chunking=ChunkingConfig(
+        file_patterns=['*.py', '*.md'],
+        chunk_size=500,
+        chunk_overlap=50
+    ),
+    embedding=EmbeddingConfig(
+        model_type='sentence-transformer',
+        embedding_dim=384
+    )
+)
+```
+
+### Repository Storage
+
+By default, repositories are cloned to `source_repo/`. This can be customized via the `local_path` parameter.
 
 ---
 
 *Last updated: January 2026*
+   ```bash
+   git clone https://github.com/samarthnaikk/getgit.git
