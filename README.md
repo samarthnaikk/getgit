@@ -27,6 +27,12 @@ The current implementation of GetGit provides:
   - Combines retrieved repository context with LLM capabilities
   - Provider-agnostic design for easy extension to other LLMs
   - Environment-based API key management
+- **Checkpoint-Based Validation System**: Automated validation of repository requirements
+  - Text-based checkpoint definitions for programmatic validation
+  - Support for file existence checks and complex semantic requirements
+  - Pass/fail results with detailed explanations and evidence
+  - Integration with RAG and LLM for intelligent evaluation
+  - Ideal for hackathon submissions, project evaluations, and CI-style checks
 
 ## Planned Features
 
@@ -162,6 +168,79 @@ The LLM connector uses Google Gemini by default. To use it, you need to set up y
    ```
 
 For complete examples with LLM integration, see `example_core_usage.py` or refer to `documentation.md` for detailed usage.
+
+### Checkpoint-Based Validation
+
+The checkpoint validation system enables programmatic validation of repository requirements using text-based checkpoints. This is useful for hackathon submissions, project evaluations, and CI-style checks.
+
+#### Creating a Checkpoints File
+
+Create a `checkpoints.txt` file with one requirement per line:
+
+```
+1. Check if the repository has README.md
+2. Check if RAG model is implemented
+3. Check if logging is configured
+4. Check if requirements.txt exists
+5. Check if the project uses Flask for web interface
+```
+
+Lines starting with `#` are treated as comments and ignored. Numbering is optional and will be stripped automatically.
+
+#### Running Checkpoint Validation
+
+```python
+from core import validate_checkpoints
+
+# Run checkpoint validation
+result = validate_checkpoints(
+    repo_url='https://github.com/username/repository.git',
+    checkpoints_file='checkpoints.txt',
+    use_llm=False,  # Set to True for enhanced evaluation with LLM
+    log_level='INFO'
+)
+
+# Display results
+print(result['summary'])
+print(f"\nPassed: {result['passed_count']}/{result['total_count']}")
+print(f"Pass Rate: {result['pass_rate']:.1f}%")
+```
+
+#### How It Works
+
+The checkpoint validation system:
+
+1. **Deterministic Checks**: Simple file existence checks are handled deterministically by scanning the repository
+2. **RAG Retrieval**: Complex requirements use semantic search to find relevant code and documentation
+3. **LLM Evaluation** (optional): When enabled, uses LLM reasoning to interpret complex requirements and provide detailed explanations
+
+#### Example Output
+
+```
+[PASS] Check if the repository has README.md
+  File 'README.md' found in repository
+  Evidence: README.md
+  Confidence: 1.00
+
+[PASS] Check if RAG model is implemented
+  Repository contains RAG implementation with retriever and embedding components
+  Evidence: rag/retriever.py, rag/embedder.py, core.py
+  Confidence: 0.89
+
+[FAIL] Check if logging is configured
+  No logging configuration found in repository
+  Evidence: No relevant files detected
+  Confidence: 0.12
+
+======================================================================
+SUMMARY
+Total Checkpoints: 3
+Passed: 2
+Failed: 1
+Pass Rate: 66.7%
+```
+
+For more examples, see `example_checkpoint_usage.py`.
 
 ## Requirements
 
