@@ -291,6 +291,128 @@ def status():
     return jsonify(response)
 
 
+@app.route('/checkpoints/list', methods=['GET'])
+def list_checkpoints():
+    """
+    Get all checkpoints from checkpoints.txt.
+    
+    Returns:
+    {
+        "success": true/false,
+        "checkpoints": [...],
+        "message": "..." (if error)
+    }
+    """
+    logger.info("Received request to list checkpoints")
+    
+    try:
+        checkpoints_file = 'checkpoints.txt'
+        
+        if not os.path.exists(checkpoints_file):
+            return jsonify({
+                'success': False,
+                'checkpoints': [],
+                'message': 'Checkpoints file not found'
+            })
+        
+        with open(checkpoints_file, 'r') as f:
+            lines = f.readlines()
+        
+        # Filter out empty lines and comments, clean up numbering
+        checkpoints = []
+        for line in lines:
+            line = line.strip()
+            if line and not line.startswith('#'):
+                # Remove numbering if present (e.g., "1. " or "1) ")
+                import re
+                cleaned = re.sub(r'^\d+[\.\)]\s*', '', line)
+                checkpoints.append(cleaned)
+        
+        logger.info(f"Retrieved {len(checkpoints)} checkpoints")
+        return jsonify({
+            'success': True,
+            'checkpoints': checkpoints
+        })
+    
+    except Exception as e:
+        logger.error(f"Failed to list checkpoints: {str(e)}", exc_info=True)
+        return jsonify({
+            'success': False,
+            'checkpoints': [],
+            'message': f'Error reading checkpoints: {str(e)}'
+        }), 500
+
+
+@app.route('/checkpoints/add', methods=['POST'])
+def add_checkpoint():
+    """
+    Add a new checkpoint to checkpoints.txt.
+    
+    Expected JSON payload:
+    {
+        "checkpoint": "Check if the repository has tests"
+    }
+    
+    Returns:
+    {
+        "success": true/false,
+        "message": "...",
+        "checkpoints": [...] (updated list)
+    }
+    """
+    logger.info("Received request to add checkpoint")
+    
+    try:
+        data = request.get_json()
+        if not data or 'checkpoint' not in data:
+            logger.warning("Missing checkpoint in request")
+            return jsonify({
+                'success': False,
+                'message': 'Missing checkpoint parameter'
+            }), 400
+        
+        checkpoint = data['checkpoint'].strip()
+        if not checkpoint:
+            return jsonify({
+                'success': False,
+                'message': 'Checkpoint cannot be empty'
+            }), 400
+        
+        checkpoints_file = 'checkpoints.txt'
+        
+        # Read existing checkpoints to get count
+        existing_checkpoints = []
+        if os.path.exists(checkpoints_file):
+            with open(checkpoints_file, 'r') as f:
+                lines = f.readlines()
+            for line in lines:
+                line = line.strip()
+                if line and not line.startswith('#'):
+                    existing_checkpoints.append(line)
+        
+        # Append new checkpoint with numbering
+        next_number = len(existing_checkpoints) + 1
+        with open(checkpoints_file, 'a') as f:
+            f.write(f"{next_number}. {checkpoint}\n")
+        
+        logger.info(f"Added checkpoint: {checkpoint}")
+        
+        # Return updated list
+        existing_checkpoints.append(f"{next_number}. {checkpoint}")
+        return jsonify({
+            'success': True,
+            'message': 'Checkpoint added successfully',
+            'checkpoints': existing_checkpoints
+        })
+    
+    except Exception as e:
+        logger.error(f"Failed to add checkpoint: {str(e)}", exc_info=True)
+        return jsonify({
+            'success': False,
+            'message': f'Error adding checkpoint: {str(e)}'
+        }), 500
+
+
 if __name__ == '__main__':
     logger.info("="*70)
     logger.info("GetGit Server Starting")

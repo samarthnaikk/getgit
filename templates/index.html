@@ -6,187 +6,344 @@
     <title>GetGit - Repository Intelligence System</title>
     <link rel="stylesheet" href="/static/css/style.css">
     <style>
+        * {
+            box-sizing: border-box;
+        }
+        
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
             margin: 0;
-            padding: 20px;
-            background-color: #f5f5f5;
+            padding: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
         }
+        
         .container {
-            max-width: 900px;
-            margin: 0 auto;
+            max-width: 1000px;
+            margin: 40px auto;
             background: white;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
         }
+        
         h1 {
-            color: #333;
-            margin-bottom: 10px;
+            color: #2d3748;
+            margin: 0 0 8px 0;
+            font-size: 2.25rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
         }
+        
         .subtitle {
-            color: #666;
-            margin-bottom: 30px;
+            color: #718096;
+            margin: 0 0 40px 0;
+            font-size: 1.125rem;
+            font-weight: 400;
         }
+        
         .section {
-            margin-bottom: 30px;
-            padding: 20px;
-            background: #f9f9f9;
-            border-radius: 6px;
+            margin-bottom: 32px;
+            padding: 28px;
+            background: #f7fafc;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
         }
+        
         .section h2 {
-            margin-top: 0;
-            color: #444;
-            font-size: 1.2em;
+            margin: 0 0 20px 0;
+            color: #2d3748;
+            font-size: 1.375rem;
+            font-weight: 600;
         }
+        
         .form-group {
-            margin-bottom: 15px;
+            margin-bottom: 20px;
         }
+        
         label {
             display: block;
-            margin-bottom: 5px;
+            margin-bottom: 8px;
             font-weight: 500;
-            color: #555;
+            color: #4a5568;
+            font-size: 0.925rem;
         }
-        input[type="text"], input[type="url"] {
+        
+        input[type="text"], 
+        input[type="url"],
+        textarea {
             width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 14px;
-            box-sizing: border-box;
+            padding: 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            font-family: inherit;
         }
+        
+        input[type="text"]:focus, 
+        input[type="url"]:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+        
         button {
-            background-color: #007bff;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             border: none;
-            padding: 10px 20px;
-            border-radius: 4px;
+            padding: 12px 24px;
+            border-radius: 6px;
             cursor: pointer;
-            font-size: 14px;
-            font-weight: 500;
+            font-size: 0.95rem;
+            font-weight: 600;
+            transition: transform 0.1s, box-shadow 0.2s;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
         }
-        button:hover {
-            background-color: #0056b3;
+        
+        button:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
         }
+        
+        button:active:not(:disabled) {
+            transform: translateY(0);
+        }
+        
         button:disabled {
-            background-color: #ccc;
+            background: #cbd5e0;
             cursor: not-allowed;
+            box-shadow: none;
         }
+        
+        button.secondary {
+            background: #e2e8f0;
+            color: #4a5568;
+            box-shadow: none;
+        }
+        
+        button.secondary:hover:not(:disabled) {
+            background: #cbd5e0;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        
         .status {
-            padding: 10px;
-            border-radius: 4px;
-            margin-bottom: 15px;
+            padding: 14px 18px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 0.925rem;
+            font-weight: 500;
+            border: 1px solid;
         }
+        
         .status.success {
-            background-color: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
+            background-color: #f0fdf4;
+            color: #166534;
+            border-color: #bbf7d0;
         }
+        
         .status.error {
-            background-color: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border-color: #fecaca;
         }
+        
         .status.info {
-            background-color: #d1ecf1;
-            color: #0c5460;
-            border: 1px solid #bee5eb;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border-color: #bfdbfe;
         }
+        
         .loading {
             display: none;
             text-align: center;
-            padding: 10px;
-            color: #666;
+            padding: 16px;
+            color: #4a5568;
+            font-weight: 500;
         }
+        
         .loading.active {
             display: block;
         }
+        
         .spinner {
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid #007bff;
+            border: 3px solid #e2e8f0;
+            border-top: 3px solid #667eea;
             border-radius: 50%;
-            width: 20px;
-            height: 20px;
-            animation: spin 1s linear infinite;
+            width: 24px;
+            height: 24px;
+            animation: spin 0.8s linear infinite;
             display: inline-block;
-            margin-right: 10px;
+            margin-right: 12px;
+            vertical-align: middle;
         }
+        
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+        
         .result-box {
             background: white;
-            padding: 15px;
-            border-radius: 4px;
-            border: 1px solid #ddd;
-            margin-top: 15px;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            margin-top: 20px;
         }
+        
         .result-box h3 {
-            margin-top: 0;
-            color: #333;
-            font-size: 1em;
+            margin: 0 0 12px 0;
+            color: #2d3748;
+            font-size: 1.125rem;
+            font-weight: 600;
         }
+        
         .result-box pre {
-            background: #f4f4f4;
-            padding: 10px;
-            border-radius: 4px;
+            background: #f7fafc;
+            padding: 16px;
+            border-radius: 6px;
             overflow-x: auto;
             white-space: pre-wrap;
             word-wrap: break-word;
+            line-height: 1.6;
+            border: 1px solid #e2e8f0;
+            margin: 0;
         }
+        
         .chunks-list {
             list-style: none;
             padding: 0;
+            margin: 0;
         }
+        
         .chunks-list li {
-            padding: 8px;
-            border-bottom: 1px solid #eee;
+            padding: 12px;
+            border-bottom: 1px solid #e2e8f0;
+            line-height: 1.5;
         }
+        
         .chunks-list li:last-child {
             border-bottom: none;
         }
+        
         .checkpoint-result {
-            padding: 10px;
-            margin-bottom: 10px;
-            border-radius: 4px;
+            padding: 14px 16px;
+            margin-bottom: 12px;
+            border-radius: 6px;
             border-left: 4px solid;
         }
+        
         .checkpoint-result.pass {
-            background: #d4edda;
-            border-color: #28a745;
+            background: #f0fdf4;
+            border-color: #22c55e;
         }
+        
         .checkpoint-result.fail {
-            background: #f8d7da;
-            border-color: #dc3545;
+            background: #fef2f2;
+            border-color: #ef4444;
         }
+        
         .checkpoint-title {
-            font-weight: 500;
-            margin-bottom: 5px;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: #2d3748;
         }
+        
         .checkpoint-explanation {
-            font-size: 0.9em;
-            color: #666;
+            font-size: 0.9rem;
+            color: #4a5568;
+            line-height: 1.5;
         }
+        
         .hidden {
             display: none;
         }
+        
         .checkbox-group {
             display: flex;
             align-items: center;
-            margin-bottom: 15px;
+            margin-bottom: 20px;
         }
+        
         .checkbox-group input[type="checkbox"] {
-            width: auto;
+            width: 18px;
+            height: 18px;
+            margin-right: 10px;
+            cursor: pointer;
+        }
+        
+        .checkbox-group label {
+            margin: 0;
+            cursor: pointer;
+            font-weight: 400;
+        }
+        
+        .checkpoint-list {
+            background: white;
+            border-radius: 6px;
+            border: 1px solid #e2e8f0;
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 16px;
+        }
+        
+        .checkpoint-item {
+            padding: 12px 16px;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .checkpoint-item:last-child {
+            border-bottom: none;
+        }
+        
+        .checkpoint-item:hover {
+            background: #f7fafc;
+        }
+        
+        .checkpoint-text {
+            flex: 1;
+            color: #2d3748;
+            font-size: 0.925rem;
+            line-height: 1.5;
+        }
+        
+        .checkpoint-number {
+            font-weight: 600;
+            color: #667eea;
             margin-right: 8px;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 32px;
+            color: #718096;
+            font-style: italic;
+        }
+        
+        .btn-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 16px;
+        }
+        
+        .btn-group button {
+            flex: 1;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>GetGit - Repository Intelligence System</h1>
-        <p class="subtitle">Analyze GitHub repositories using RAG + LLM</p>
+        <h1>GetGit</h1>
+        <p class="subtitle">Repository Intelligence System with RAG + LLM</p>
 
         <!-- Status Display -->
         <div id="statusDisplay" class="hidden"></div>
@@ -199,40 +356,62 @@
         <div class="section">
             <h2>1. Initialize Repository</h2>
             <div class="form-group">
-                <label for="repoUrl">GitHub Repository URL:</label>
-                <input type="url" id="repoUrl" placeholder="https://github.com/user/repo" required>
+                <label for="repoUrl">GitHub Repository URL</label>
+                <input type="url" id="repoUrl" placeholder="https://github.com/username/repository" required>
             </div>
             <button id="initBtn" onclick="initializeRepository()">Initialize Repository</button>
             <div id="initResult" class="hidden"></div>
         </div>
 
-        <!-- Section 2: Ask Questions -->
-        <div class="section" id="askSection">
-            <h2>2. Ask Questions</h2>
+        <!-- Section 2: Manage Checkpoints -->
+        <div class="section">
+            <h2>2. Manage Checkpoints</h2>
             <div class="form-group">
-                <label for="question">Your Question:</label>
+                <label for="newCheckpoint">Add New Checkpoint</label>
+                <textarea id="newCheckpoint" placeholder="Enter checkpoint requirement (e.g., Check if the repository has tests)"></textarea>
+            </div>
+            <button onclick="addCheckpoint()">Add Checkpoint</button>
+            
+            <div class="form-group" style="margin-top: 24px;">
+                <label>Existing Checkpoints</label>
+                <div id="checkpointsList" class="checkpoint-list">
+                    <div class="empty-state">No checkpoints loaded. Click "Load Checkpoints" to view.</div>
+                </div>
+            </div>
+            
+            <div class="btn-group">
+                <button class="secondary" onclick="loadCheckpoints()">Load Checkpoints</button>
+                <button class="secondary" onclick="clearCheckpointsDisplay()">Clear Display</button>
+            </div>
+        </div>
+
+        <!-- Section 3: Ask Questions -->
+        <div class="section">
+            <h2>3. Ask Questions</h2>
+            <div class="form-group">
+                <label for="question">Your Question</label>
                 <input type="text" id="question" placeholder="What is this project about?" required>
             </div>
             <div class="checkbox-group">
                 <input type="checkbox" id="useLlmAsk" checked>
-                <label for="useLlmAsk" style="margin: 0;">Use LLM for answer generation (requires GEMINI_API_KEY)</label>
+                <label for="useLlmAsk">Use LLM for answer generation (requires GEMINI_API_KEY)</label>
             </div>
             <button id="askBtn" onclick="askQuestion()" disabled>Ask Question</button>
             <div id="askResult" class="hidden"></div>
         </div>
 
-        <!-- Section 3: Run Checkpoints -->
-        <div class="section" id="checkpointsSection">
-            <h2>3. Run Checkpoints</h2>
+        <!-- Section 4: Run Checkpoints -->
+        <div class="section">
+            <h2>4. Run Checkpoint Validation</h2>
             <div class="form-group">
-                <label for="checkpointsFile">Checkpoints File:</label>
+                <label for="checkpointsFile">Checkpoints File</label>
                 <input type="text" id="checkpointsFile" value="checkpoints.txt" required>
             </div>
             <div class="checkbox-group">
                 <input type="checkbox" id="useLlmCheckpoints" checked>
-                <label for="useLlmCheckpoints" style="margin: 0;">Use LLM for checkpoint evaluation (requires GEMINI_API_KEY)</label>
+                <label for="useLlmCheckpoints">Use LLM for checkpoint evaluation (requires GEMINI_API_KEY)</label>
             </div>
-            <button id="checkpointsBtn" onclick="runCheckpoints()" disabled>Run Checkpoints</button>
+            <button id="checkpointsBtn" onclick="runCheckpoints()" disabled>Run Validation</button>
             <div id="checkpointsResult" class="hidden"></div>
         </div>
     </div>
@@ -308,6 +487,81 @@
             }
         }
 
+        async function loadCheckpoints() {
+            showLoading(true);
+            
+            try {
+                const response = await fetch('/checkpoints/list');
+                const data = await response.json();
+                
+                const listDiv = document.getElementById('checkpointsList');
+                
+                if (data.success && data.checkpoints.length > 0) {
+                    let html = '';
+                    data.checkpoints.forEach((checkpoint, index) => {
+                        html += `
+                            <div class="checkpoint-item">
+                                <span class="checkpoint-text">
+                                    <span class="checkpoint-number">${index + 1}.</span>
+                                    ${checkpoint}
+                                </span>
+                            </div>
+                        `;
+                    });
+                    listDiv.innerHTML = html;
+                    showStatus(`Loaded ${data.checkpoints.length} checkpoints`, 'success');
+                } else {
+                    listDiv.innerHTML = '<div class="empty-state">No checkpoints found in checkpoints.txt</div>';
+                    showStatus(data.message || 'No checkpoints found', 'info');
+                }
+            } catch (error) {
+                showStatus('Error loading checkpoints: ' + error.message, 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        async function addCheckpoint() {
+            const checkpoint = document.getElementById('newCheckpoint').value.trim();
+            
+            if (!checkpoint) {
+                showStatus('Please enter a checkpoint', 'error');
+                return;
+            }
+
+            showLoading(true);
+
+            try {
+                const response = await fetch('/checkpoints/add', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ checkpoint: checkpoint })
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    showStatus(data.message, 'success');
+                    document.getElementById('newCheckpoint').value = '';
+                    // Reload the checkpoints list
+                    await loadCheckpoints();
+                } else {
+                    showStatus(data.message, 'error');
+                }
+            } catch (error) {
+                showStatus('Error adding checkpoint: ' + error.message, 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        function clearCheckpointsDisplay() {
+            const listDiv = document.getElementById('checkpointsList');
+            listDiv.innerHTML = '<div class="empty-state">Click "Load Checkpoints" to view checkpoints.</div>';
+        }
+
         async function askQuestion() {
             const question = document.getElementById('question').value.trim();
             const useLlm = document.getElementById('useLlmAsk').checked;
@@ -343,12 +597,12 @@
                     
                     if (data.response) {
                         resultHtml += `
-                            <h3>Answer:</h3>
+                            <h3>Answer</h3>
                             <pre>${data.response}</pre>
                         `;
                     } else if (data.error) {
                         resultHtml += `
-                            <h3>Error:</h3>
+                            <h3>Error</h3>
                             <p class="status error">${data.error}</p>
                             <p><em>Note: LLM response generation failed. Showing retrieved context below.</em></p>
                         `;
@@ -356,7 +610,7 @@
                     
                     if (data.retrieved_chunks && data.retrieved_chunks.length > 0) {
                         resultHtml += `
-                            <h3>Retrieved Chunks (${data.retrieved_chunks.length}):</h3>
+                            <h3>Retrieved Chunks (${data.retrieved_chunks.length})</h3>
                             <ul class="chunks-list">
                         `;
                         data.retrieved_chunks.forEach(chunk => {
@@ -413,7 +667,7 @@
                 const data = await response.json();
                 
                 if (data.success) {
-                    showStatus(`Checkpoints completed: ${data.passed_count}/${data.total_count} passed`, 'success');
+                    showStatus(`Validation completed: ${data.passed_count}/${data.total_count} passed`, 'success');
                     
                     const resultDiv = document.getElementById('checkpointsResult');
                     let resultHtml = `<div class="result-box">`;
