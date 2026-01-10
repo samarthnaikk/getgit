@@ -22,6 +22,11 @@ The current implementation of GetGit provides:
   - Semantic embedding and vector-based retrieval
   - Natural language queries over repository content
   - Support for multiple file types and programming languages
+- **LLM-Based Response Generation**: Integration with Large Language Models for natural language responses
+  - Google Gemini integration for generating contextual answers
+  - Combines retrieved repository context with LLM capabilities
+  - Provider-agnostic design for easy extension to other LLMs
+  - Environment-based API key management
 
 ## Planned Features
 
@@ -120,6 +125,50 @@ For a complete example, run:
 python example_rag_usage.py
 ```
 
+### LLM-Based Response Generation
+
+The LLM connector module enables generating natural language responses by combining retrieved repository context with Large Language Models:
+
+```python
+from rag import RepositoryChunker, SimpleEmbedding, Retriever, generate_response, RAGConfig
+
+# Initialize and index repository (as shown above)
+config = RAGConfig.default()
+chunker = RepositoryChunker('path/to/repo', repository_name='my-repo')
+chunks = chunker.chunk_repository(config.chunking.file_patterns)
+embedding_model = SimpleEmbedding(max_features=384)
+retriever = Retriever(embedding_model)
+retriever.index_chunks(chunks)
+
+# Retrieve relevant context
+query = "How do I configure authentication?"
+results = retriever.retrieve(query, top_k=5)
+context_chunks = [result.chunk.content for result in results]
+
+# Generate LLM response using retrieved context
+response = generate_response(query, context_chunks)
+print(response)
+```
+
+#### Setting up the LLM API Key
+
+The LLM connector uses Google Gemini by default. To use it, you need to set up your API key:
+
+1. Get a Gemini API key from [Google AI Studio](https://makersuite.google.com/app/apikey)
+2. Create a `.env` file in the project root:
+   ```
+   GEMINI_API_KEY=your_api_key_here
+   ```
+3. Or export it as an environment variable:
+   ```bash
+   export GEMINI_API_KEY=your_api_key_here
+   ```
+
+For a complete example with LLM integration, run:
+```bash
+python example_llm_rag.py
+```
+
 ## Requirements
 
 ### Core Dependencies
@@ -130,6 +179,8 @@ python example_rag_usage.py
 
 ### Optional Dependencies
 - sentence-transformers >= 2.0.0 (for advanced semantic embeddings)
+- google-generativeai >= 0.3.0 (for LLM-based response generation)
+- python-dotenv >= 0.19.0 (for environment variable management)
 
 Install all dependencies with:
 ```bash
