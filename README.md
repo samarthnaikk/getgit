@@ -88,6 +88,51 @@ pip install -r requirements.txt
 
 ## Usage
 
+### Web Interface (Recommended)
+
+GetGit provides a user-friendly web interface that serves as the single entry point for all functionality. This is the recommended way to use GetGit:
+
+```bash
+# Start the Flask server
+python server.py
+
+# For development mode with debug enabled
+FLASK_ENV=development python server.py
+```
+
+Then open your browser and navigate to `http://localhost:5000`
+
+The web interface provides three main features:
+
+1. **Initialize Repository**: Clone and prepare a GitHub repository for analysis
+2. **Ask Questions**: Query the repository using natural language
+3. **Run Checkpoints**: Validate repository against defined requirements
+
+**API Endpoints:**
+
+- `POST /initialize` - Initialize repository and setup RAG pipeline
+  ```json
+  {"repo_url": "https://github.com/user/repo.git"}
+  ```
+
+- `POST /ask` - Answer questions about the repository
+  ```json
+  {"query": "What is this project about?", "use_llm": true}
+  ```
+
+- `POST /checkpoints` - Run checkpoint validation
+  ```json
+  {"checkpoints_file": "checkpoints.txt", "use_llm": true}
+  ```
+
+- `GET /status` - Get current application status
+
+**Environment Variables:**
+
+- `GEMINI_API_KEY` - Required for LLM-powered responses (get from [Google AI Studio](https://makersuite.google.com/app/apikey))
+- `FLASK_SECRET_KEY` - Secret key for Flask sessions (set in production)
+- `FLASK_ENV` - Set to `development` to enable debug mode
+
 ### Basic Repository Cloning
 
 The tool provides repository cloning functionality through the `clone_repo` module:
