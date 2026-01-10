@@ -17,6 +17,11 @@ The current implementation of GetGit provides:
 - **Repository Cloning**: Automated cloning of GitHub repositories to a local destination folder with cleanup of existing directories
 - **GitHub API Integration**: Direct integration with GitHub's REST API for retrieving repository metadata
 - **Query Pattern Matching**: Pattern-based analysis system for understanding and responding to repository-related queries
+- **RAG-Based Chunking and Retrieval**: Advanced semantic search and context extraction for repository analysis
+  - Intelligent chunking of source code, documentation, and configuration files
+  - Semantic embedding and vector-based retrieval
+  - Natural language queries over repository content
+  - Support for multiple file types and programming languages
 
 ## Planned Features
 
@@ -72,6 +77,8 @@ pip install -r requirements.txt
 
 ## Usage
 
+### Basic Repository Cloning
+
 The tool provides repository cloning functionality through the `clone_repo` module:
 
 ```python
@@ -81,12 +88,53 @@ from clone_repo import clone_repo
 clone_repo('https://github.com/username/repository.git', 'destination_folder')
 ```
 
-Additional usage documentation will be provided as new features are implemented.
+### RAG-Based Repository Analysis
+
+The RAG (Retrieval-Augmented Generation) module enables semantic search and intelligent context extraction from repositories:
+
+```python
+from rag import RepositoryChunker, SimpleEmbedding, Retriever, RAGConfig
+
+# Initialize configuration
+config = RAGConfig.default()
+
+# Chunk the repository
+chunker = RepositoryChunker('path/to/repo', repository_name='my-repo')
+chunks = chunker.chunk_repository(config.chunking.file_patterns)
+
+# Create retriever and index chunks
+embedding_model = SimpleEmbedding(max_features=384)
+retriever = Retriever(embedding_model)
+retriever.index_chunks(chunks)
+
+# Query the repository with natural language
+results = retriever.retrieve("How do I configure authentication?", top_k=5)
+
+# Display results
+for result in results:
+    print(f"[{result.rank}] {result.chunk.file_path} (score: {result.score:.4f})")
+```
+
+For a complete example, run:
+```bash
+python example_rag_usage.py
+```
 
 ## Requirements
 
+### Core Dependencies
 - Python 3.6 or higher
 - GitPython library
+- numpy >= 1.20.0
+- scikit-learn >= 0.24.0
+
+### Optional Dependencies
+- sentence-transformers >= 2.0.0 (for advanced semantic embeddings)
+
+Install all dependencies with:
+```bash
+pip install -r requirements.txt
+```
 
 ## Contributing
 
