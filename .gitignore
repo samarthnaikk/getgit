@@ -152,6 +152,8 @@ cache/
 temp/
 output/
 results/
+.rag_cache/
+source_repo/
 
 # GitHub API token files
 .github_token
