@@ -4,10 +4,11 @@ This module provides the Flask web interface for GetGit.
 All business logic is delegated to core.py.
 """
 
-from flask import Flask, render_template, request, jsonify, session
+from flask import Flask, render_template, request, jsonify
 import logging
 import os
 from typing import Optional
+import threading
 
 # Import core module functions
 from core import (
@@ -21,7 +22,6 @@ from rag import RAGConfig
 
 # Configure Flask app
 app = Flask(__name__)
-app.secret_key = os.environ.get('FLASK_SECRET_KEY', 'dev-secret-key-change-in-production')
 
 # Configure server logging
 logging.basicConfig(
@@ -38,6 +38,9 @@ app_state = {
     'repo_path': None,
     'repo_url': None
 }
+
+# Thread lock for thread-safe state access
+state_lock = threading.Lock()
 
 
 @app.route('/', methods=['GET'])
@@ -90,14 +93,11 @@ def initialize():
         chunks_count = len(retriever)
         logger.info(f"RAG pipeline ready with {chunks_count} chunks")
         
-        # Store in app state
-        app_state['retriever'] = retriever
-        app_state['repo_path'] = repo_path
-        app_state['repo_url'] = repo_url
-        
-        # Store in session for user tracking
-        session['repo_url'] = repo_url
-        session['initialized'] = True
+        # Store in app state (repository-level persistence)
+        with state_lock:
+            app_state['retriever'] = retriever
+            app_state['repo_path'] = repo_path
+            app_state['repo_url'] = repo_url
         
         logger.info("Repository initialization completed successfully")
         return jsonify({
@@ -139,7 +139,10 @@ def ask_question():
     
     try:
         # Check if repository is initialized
-        if app_state['retriever'] is None:
+        with state_lock:
+            retriever = app_state['retriever']
+        
+        if retriever is None:
             logger.warning("Question asked without initializing repository")
             return jsonify({
                 'success': False,
@@ -162,7 +165,7 @@ def ask_question():
         # Process query using core.py
         result = answer_query(
             query=query,
-            retriever=app_state['retriever'],
+            retriever=retriever,
             top_k=5,
             use_llm=use_llm
         )
@@ -212,7 +215,11 @@ def run_checkpoints():
     
     try:
         # Check if repository is initialized
-        if app_state['repo_url'] is None:
+        with state_lock:
+            repo_url = app_state['repo_url']
+            repo_path = app_state['repo_path']
+        
+        if repo_url is None:
             logger.warning("Checkpoints requested without initializing repository")
             return jsonify({
                 'success': False,
@@ -227,9 +234,9 @@ def run_checkpoints():
         
         # Run checkpoint validation
         result = validate_checkpoints(
-            repo_url=app_state['repo_url'],
+            repo_url=repo_url,
             checkpoints_file=checkpoints_file,
-            local_path=app_state['repo_path'],
+            local_path=repo_path,
             use_llm=use_llm,
             log_level='INFO'
         )
@@ -278,15 +285,16 @@ def status():
         "chunks_count": 123 (if initialized)
     }
     """
-    is_initialized = app_state['retriever'] is not None
-    
-    response = {
-        'initialized': is_initialized
-    }
-    
-    if is_initialized:
-        response['repo_url'] = app_state['repo_url']
-        response['chunks_count'] = len(app_state['retriever'])
+    with state_lock:
+        is_initialized = app_state['retriever'] is not None
+        
+        response = {
+            'initialized': is_initialized
+        }
+        
+        if is_initialized:
+            response['repo_url'] = app_state['repo_url']
+            response['chunks_count'] = len(app_state['retriever'])
     
     return jsonify(response)
 
