@@ -34,7 +34,7 @@ GetGit is a repository intelligence system that helps you analyze and understand
    ```bash
    docker run -p 5000:5000 \
      -e GEMINI_API_KEY="your_api_key_here" \
-     -e FLASK_SECRET_KEY="your_secret_key_here" \
+
      getgit
    ```
 
@@ -59,7 +59,7 @@ GetGit is a repository intelligence system that helps you analyze and understand
 ## Environment Variables
 
 - `GEMINI_API_KEY` - Required for LLM-powered responses (get from [Google AI Studio](https://makersuite.google.com/app/apikey))
-- `FLASK_SECRET_KEY` - Secret key for Flask sessions (set in production)
+
 - `FLASK_ENV` - Set to `development` to enable debug mode
 
 ## Requirements

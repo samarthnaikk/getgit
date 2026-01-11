@@ -3,3 +3,13 @@
 # Lines starting with # are comments and will be ignored
 
 
+1. Dataset Loading and Exploration
+Image Preprocessing Pipeline
+Baseline Classification Model Implementation
+Convolutional Neural Network Architecture Design
+Model Training and Optimization
+Model Evaluation and Metrics Computation
+Model Comparison and Performance Analysis
+Digit Prediction and Inference Module
+Generalization Testing on Unseen Data
+Code Documentation and Repository Finalization

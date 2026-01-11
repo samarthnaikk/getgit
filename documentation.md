@@ -355,7 +355,7 @@ The web interface provides checkpoint management:
    export GEMINI_API_KEY=your_api_key_here
    
    # For production deployment
-   export FLASK_SECRET_KEY=your_secret_key_here
+
    ```
 
 ### Running the Application
@@ -679,7 +679,7 @@ Get current application status.
 ### Environment Variables
 
 - **GEMINI_API_KEY**: API key for Google Gemini LLM (optional)
-- **FLASK_SECRET_KEY**: Secret key for Flask sessions (required for production)
+
 - **FLASK_ENV**: Set to `development` for debug mode
 
 ### RAG Configuration
