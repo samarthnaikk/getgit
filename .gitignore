@@ -148,6 +148,12 @@ output/
 results/
 .rag_cache/
 source_repo/
+data/
+
+# Local LLM models
+models/
+*.bin
+*.safetensors
 
 # GitHub API token files
 .github_token
