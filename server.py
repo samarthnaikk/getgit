@@ -24,8 +24,14 @@ from rag import RAGConfig
 app = Flask(__name__)
 
 # Configure Flask secret key for sessions
-# In production, set FLASK_SECRET_KEY environment variable
-app.config['SECRET_KEY'] = os.environ.get('FLASK_SECRET_KEY', 'dev-secret-key-change-in-production')
+# In production, FLASK_SECRET_KEY environment variable must be set
+# For development, generate a random key if not provided
+import secrets
+default_secret = secrets.token_hex(32) if os.environ.get('FLASK_ENV') == 'development' else None
+app.config['SECRET_KEY'] = os.environ.get('FLASK_SECRET_KEY', default_secret)
+
+if app.config['SECRET_KEY'] is None:
+    raise ValueError("FLASK_SECRET_KEY environment variable must be set in production")
 
 # Configure server logging
 logging.basicConfig(
