@@ -1,0 +1,51 @@
+# Git files
+.git
+.gitignore
+.gitattributes
+
+# Python cache
+__pycache__
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Project specific
+*.token
+.github_token
+github_token.txt
+config.json
+cache/
+temp/
+output/
+results/
+.rag_cache/
+source_repo/
+
+# Documentation (already in image)
+documentation.md
+
+# Test files (if any)
+tests/
+test_*
+*_test.py
+
+# CI/CD
+.github/

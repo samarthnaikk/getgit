@@ -23,6 +23,16 @@ from rag import RAGConfig
 # Configure Flask app
 app = Flask(__name__)
 
+# Configure Flask secret key for sessions
+# In production, FLASK_SECRET_KEY environment variable must be set
+# For development, generate a random key if not provided
+import secrets
+default_secret = secrets.token_hex(32) if os.environ.get('FLASK_ENV') == 'development' else None
+app.config['SECRET_KEY'] = os.environ.get('FLASK_SECRET_KEY', default_secret)
+
+if app.config['SECRET_KEY'] is None:
+    raise ValueError("FLASK_SECRET_KEY environment variable must be set in production")
+
 # Configure server logging
 logging.basicConfig(
     level=logging.INFO,
@@ -430,4 +440,8 @@ if __name__ == '__main__':
     # Debug mode should only be enabled in development
     # Set FLASK_ENV=development to enable debug mode
     debug_mode = os.environ.get('FLASK_ENV') == 'development'
-    app.run(debug=debug_mode, host='0.0.0.0', port=5001)
+    
+    # Port can be configured via environment variable, defaults to 5000
+    port = int(os.environ.get('PORT', 5000))
+    
+    app.run(debug=debug_mode, host='0.0.0.0', port=port)

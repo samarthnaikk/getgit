@@ -18,6 +18,31 @@ GetGit is a repository intelligence system that helps you analyze and understand
 
 ## How to Run
 
+### Using Docker (Recommended)
+
+1. **Build the Docker image:**
+   ```bash
+   docker build -t getgit .
+   ```
+
+2. **Run the container:**
+   ```bash
+   docker run -p 5000:5000 getgit
+   ```
+
+3. **Run with environment variables:**
+   ```bash
+   docker run -p 5000:5000 \
+     -e GEMINI_API_KEY="your_api_key_here" \
+     -e FLASK_SECRET_KEY="your_secret_key_here" \
+     getgit
+   ```
+
+4. **Open your browser:**
+   Navigate to `http://localhost:5000`
+
+### Running Locally
+
 1. **Install dependencies:**
    ```bash
    pip install -r requirements.txt
