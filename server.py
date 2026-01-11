@@ -4,7 +4,7 @@ This module provides the Flask web interface for GetGit.
 All business logic is delegated to core.py.
 """
 
-from flask import Flask, render_template, request, jsonify, session
+from flask import Flask, render_template, request, jsonify
 import logging
 import os
 from typing import Optional
@@ -21,7 +21,6 @@ from rag import RAGConfig
 
 # Configure Flask app
 app = Flask(__name__)
-app.secret_key = os.environ.get('FLASK_SECRET_KEY', 'dev-secret-key-change-in-production')
 
 # Configure server logging
 logging.basicConfig(
@@ -90,14 +89,10 @@ def initialize():
         chunks_count = len(retriever)
         logger.info(f"RAG pipeline ready with {chunks_count} chunks")
         
-        # Store in app state
+        # Store in app state (repository-level persistence)
         app_state['retriever'] = retriever
         app_state['repo_path'] = repo_path
         app_state['repo_url'] = repo_url
-        
-        # Store in session for user tracking
-        session['repo_url'] = repo_url
-        session['initialized'] = True
         
         logger.info("Repository initialization completed successfully")
         return jsonify({

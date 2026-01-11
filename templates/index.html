@@ -1,11 +1,91 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GetGit - Repository Intelligence System</title>
     <link rel="stylesheet" href="/static/css/style.css">
     <style>
+        :root {
+            /* Light theme colors */
+            --bg-gradient-start: #667eea;
+            --bg-gradient-end: #764ba2;
+            --container-bg: #ffffff;
+            --text-primary: #2d3748;
+            --text-secondary: #718096;
+            --section-bg: #f7fafc;
+            --border-color: #e2e8f0;
+            --input-bg: #ffffff;
+            --input-border: #e2e8f0;
+            --input-focus-border: #667eea;
+            --button-gradient-start: #667eea;
+            --button-gradient-end: #764ba2;
+            --button-text: #ffffff;
+            --button-secondary-bg: #e2e8f0;
+            --button-secondary-text: #4a5568;
+            --button-disabled-bg: #cbd5e0;
+            --success-bg: #f0fdf4;
+            --success-text: #166534;
+            --success-border: #bbf7d0;
+            --error-bg: #fef2f2;
+            --error-text: #991b1b;
+            --error-border: #fecaca;
+            --info-bg: #eff6ff;
+            --info-text: #1e40af;
+            --info-border: #bfdbfe;
+            --result-box-bg: #ffffff;
+            --result-box-pre-bg: #f7fafc;
+            --checkpoint-pass-bg: #f0fdf4;
+            --checkpoint-pass-border: #22c55e;
+            --checkpoint-fail-bg: #fef2f2;
+            --checkpoint-fail-border: #ef4444;
+            --spinner-border: #e2e8f0;
+            --spinner-border-top: #667eea;
+            --empty-state-text: #718096;
+            --toggle-bg: #cbd5e0;
+            --toggle-active: #667eea;
+        }
+
+        [data-theme="dark"] {
+            /* Dark theme colors */
+            --bg-gradient-start: #1a1a2e;
+            --bg-gradient-end: #16213e;
+            --container-bg: #0f1419;
+            --text-primary: #e4e4e7;
+            --text-secondary: #a1a1aa;
+            --section-bg: #1a1d23;
+            --border-color: #2d3748;
+            --input-bg: #1a1d23;
+            --input-border: #2d3748;
+            --input-focus-border: #667eea;
+            --button-gradient-start: #667eea;
+            --button-gradient-end: #764ba2;
+            --button-text: #ffffff;
+            --button-secondary-bg: #2d3748;
+            --button-secondary-text: #e4e4e7;
+            --button-disabled-bg: #374151;
+            --success-bg: #022c22;
+            --success-text: #86efac;
+            --success-border: #166534;
+            --error-bg: #2c0b0e;
+            --error-text: #fca5a5;
+            --error-border: #991b1b;
+            --info-bg: #1e3a8a;
+            --info-text: #93c5fd;
+            --info-border: #1e40af;
+            --result-box-bg: #1a1d23;
+            --result-box-pre-bg: #0f1419;
+            --checkpoint-pass-bg: #022c22;
+            --checkpoint-pass-border: #22c55e;
+            --checkpoint-fail-bg: #2c0b0e;
+            --checkpoint-fail-border: #ef4444;
+            --spinner-border: #2d3748;
+            --spinner-border-top: #667eea;
+            --empty-state-text: #71717a;
+            --toggle-bg: #374151;
+            --toggle-active: #667eea;
+        }
+
         * {
             box-sizing: border-box;
         }
@@ -14,47 +94,93 @@
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
             margin: 0;
             padding: 0;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
             min-height: 100vh;
+            transition: background 0.3s ease;
         }
         
         .container {
             max-width: 1000px;
             margin: 40px auto;
-            background: white;
+            background: var(--container-bg);
             padding: 40px;
             border-radius: 12px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            transition: background 0.3s ease;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 32px;
+        }
+
+        .header-content {
+            flex: 1;
         }
         
         h1 {
-            color: #2d3748;
+            color: var(--text-primary);
             margin: 0 0 8px 0;
             font-size: 2.25rem;
             font-weight: 700;
             letter-spacing: -0.5px;
+            transition: color 0.3s ease;
         }
         
         .subtitle {
-            color: #718096;
-            margin: 0 0 40px 0;
+            color: var(--text-secondary);
+            margin: 0;
             font-size: 1.125rem;
             font-weight: 400;
+            transition: color 0.3s ease;
+        }
+
+        .theme-toggle {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 16px;
+            background: var(--section-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .theme-toggle:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .theme-toggle-icon {
+            font-size: 1.2rem;
+            transition: transform 0.3s ease;
+        }
+
+        .theme-toggle-label {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: color 0.3s ease;
         }
         
         .section {
             margin-bottom: 32px;
             padding: 28px;
-            background: #f7fafc;
+            background: var(--section-bg);
             border-radius: 8px;
-            border: 1px solid #e2e8f0;
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
         }
         
         .section h2 {
             margin: 0 0 20px 0;
-            color: #2d3748;
+            color: var(--text-primary);
             font-size: 1.375rem;
             font-weight: 600;
+            transition: color 0.3s ease;
         }
         
         .form-group {
@@ -65,8 +191,9 @@
             display: block;
             margin-bottom: 8px;
             font-weight: 500;
-            color: #4a5568;
+            color: var(--text-secondary);
             font-size: 0.925rem;
+            transition: color 0.3s ease;
         }
         
         input[type="text"], 
@@ -74,18 +201,20 @@
         textarea {
             width: 100%;
             padding: 12px 16px;
-            border: 2px solid #e2e8f0;
+            border: 2px solid var(--input-border);
             border-radius: 6px;
             font-size: 0.95rem;
-            transition: border-color 0.2s, box-shadow 0.2s;
+            transition: all 0.3s ease;
             font-family: inherit;
+            background: var(--input-bg);
+            color: var(--text-primary);
         }
         
         input[type="text"]:focus, 
         input[type="url"]:focus,
         textarea:focus {
             outline: none;
-            border-color: #667eea;
+            border-color: var(--input-focus-border);
             box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
         }
         
@@ -95,15 +224,15 @@
         }
         
         button {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+            background: linear-gradient(135deg, var(--button-gradient-start) 0%, var(--button-gradient-end) 100%);
+            color: var(--button-text);
             border: none;
             padding: 12px 24px;
             border-radius: 6px;
             cursor: pointer;
             font-size: 0.95rem;
             font-weight: 600;
-            transition: transform 0.1s, box-shadow 0.2s;
+            transition: all 0.2s ease;
             box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
         }
         
@@ -117,19 +246,19 @@
         }
         
         button:disabled {
-            background: #cbd5e0;
+            background: var(--button-disabled-bg);
             cursor: not-allowed;
             box-shadow: none;
         }
         
         button.secondary {
-            background: #e2e8f0;
-            color: #4a5568;
+            background: var(--button-secondary-bg);
+            color: var(--button-secondary-text);
             box-shadow: none;
         }
         
         button.secondary:hover:not(:disabled) {
-            background: #cbd5e0;
+            background: var(--toggle-bg);
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         }
         
@@ -140,32 +269,34 @@
             font-size: 0.925rem;
             font-weight: 500;
             border: 1px solid;
+            transition: all 0.3s ease;
         }
         
         .status.success {
-            background-color: #f0fdf4;
-            color: #166534;
-            border-color: #bbf7d0;
+            background-color: var(--success-bg);
+            color: var(--success-text);
+            border-color: var(--success-border);
         }
         
         .status.error {
-            background-color: #fef2f2;
-            color: #991b1b;
-            border-color: #fecaca;
+            background-color: var(--error-bg);
+            color: var(--error-text);
+            border-color: var(--error-border);
         }
         
         .status.info {
-            background-color: #eff6ff;
-            color: #1e40af;
-            border-color: #bfdbfe;
+            background-color: var(--info-bg);
+            color: var(--info-text);
+            border-color: var(--info-border);
         }
         
         .loading {
             display: none;
             text-align: center;
             padding: 16px;
-            color: #4a5568;
+            color: var(--text-secondary);
             font-weight: 500;
+            transition: color 0.3s ease;
         }
         
         .loading.active {
@@ -173,8 +304,8 @@
         }
         
         .spinner {
-            border: 3px solid #e2e8f0;
-            border-top: 3px solid #667eea;
+            border: 3px solid var(--spinner-border);
+            border-top: 3px solid var(--spinner-border-top);
             border-radius: 50%;
             width: 24px;
             height: 24px;
@@ -190,30 +321,45 @@
         }
         
         .result-box {
-            background: white;
+            background: var(--result-box-bg);
             padding: 20px;
             border-radius: 8px;
-            border: 1px solid #e2e8f0;
+            border: 1px solid var(--border-color);
             margin-top: 20px;
+            transition: all 0.3s ease;
         }
         
         .result-box h3 {
             margin: 0 0 12px 0;
-            color: #2d3748;
+            color: var(--text-primary);
             font-size: 1.125rem;
             font-weight: 600;
+            transition: color 0.3s ease;
         }
         
         .result-box pre {
-            background: #f7fafc;
+            background: var(--result-box-pre-bg);
             padding: 16px;
             border-radius: 6px;
             overflow-x: auto;
             white-space: pre-wrap;
             word-wrap: break-word;
             line-height: 1.6;
-            border: 1px solid #e2e8f0;
+            border: 1px solid var(--border-color);
             margin: 0;
+            color: var(--text-primary);
+            transition: all 0.3s ease;
+        }
+        
+        .result-box p {
+            color: var(--text-secondary);
+            line-height: 1.6;
+            transition: color 0.3s ease;
+        }
+
+        .result-box strong {
+            color: var(--text-primary);
+            transition: color 0.3s ease;
         }
         
         .chunks-list {
@@ -224,12 +370,18 @@
         
         .chunks-list li {
             padding: 12px;
-            border-bottom: 1px solid #e2e8f0;
+            border-bottom: 1px solid var(--border-color);
             line-height: 1.5;
+            color: var(--text-secondary);
+            transition: all 0.3s ease;
         }
         
         .chunks-list li:last-child {
             border-bottom: none;
+        }
+
+        .chunks-list li strong {
+            color: var(--text-primary);
         }
         
         .checkpoint-result {
@@ -237,28 +389,31 @@
             margin-bottom: 12px;
             border-radius: 6px;
             border-left: 4px solid;
+            transition: all 0.3s ease;
         }
         
         .checkpoint-result.pass {
-            background: #f0fdf4;
-            border-color: #22c55e;
+            background: var(--checkpoint-pass-bg);
+            border-color: var(--checkpoint-pass-border);
         }
         
         .checkpoint-result.fail {
-            background: #fef2f2;
-            border-color: #ef4444;
+            background: var(--checkpoint-fail-bg);
+            border-color: var(--checkpoint-fail-border);
         }
         
         .checkpoint-title {
             font-weight: 600;
             margin-bottom: 6px;
-            color: #2d3748;
+            color: var(--text-primary);
+            transition: color 0.3s ease;
         }
         
         .checkpoint-explanation {
             font-size: 0.9rem;
-            color: #4a5568;
+            color: var(--text-secondary);
             line-height: 1.5;
+            transition: color 0.3s ease;
         }
         
         .hidden {
@@ -276,29 +431,33 @@
             height: 18px;
             margin-right: 10px;
             cursor: pointer;
+            accent-color: var(--button-gradient-start);
         }
         
         .checkbox-group label {
             margin: 0;
             cursor: pointer;
             font-weight: 400;
+            color: var(--text-secondary);
         }
         
         .checkpoint-list {
-            background: white;
+            background: var(--result-box-bg);
             border-radius: 6px;
-            border: 1px solid #e2e8f0;
+            border: 1px solid var(--border-color);
             max-height: 300px;
             overflow-y: auto;
             margin-top: 16px;
+            transition: all 0.3s ease;
         }
         
         .checkpoint-item {
             padding: 12px 16px;
-            border-bottom: 1px solid #e2e8f0;
+            border-bottom: 1px solid var(--border-color);
             display: flex;
             justify-content: space-between;
             align-items: center;
+            transition: background 0.2s ease;
         }
         
         .checkpoint-item:last-child {
@@ -306,27 +465,29 @@
         }
         
         .checkpoint-item:hover {
-            background: #f7fafc;
+            background: var(--section-bg);
         }
         
         .checkpoint-text {
             flex: 1;
-            color: #2d3748;
+            color: var(--text-primary);
             font-size: 0.925rem;
             line-height: 1.5;
+            transition: color 0.3s ease;
         }
         
         .checkpoint-number {
             font-weight: 600;
-            color: #667eea;
+            color: var(--button-gradient-start);
             margin-right: 8px;
         }
         
         .empty-state {
             text-align: center;
             padding: 32px;
-            color: #718096;
+            color: var(--empty-state-text);
             font-style: italic;
+            transition: color 0.3s ease;
         }
         
         .btn-group {
@@ -342,8 +503,16 @@
 </head>
 <body>
     <div class="container">
-        <h1>GetGit</h1>
-        <p class="subtitle">Repository Intelligence System with RAG + LLM</p>
+        <div class="header">
+            <div class="header-content">
+                <h1>GetGit</h1>
+                <p class="subtitle">Repository Intelligence System with RAG + LLM</p>
+            </div>
+            <div class="theme-toggle" onclick="toggleTheme()" title="Toggle theme">
+                <span class="theme-toggle-icon" id="themeIcon">🌙</span>
+                <span class="theme-toggle-label" id="themeLabel">Dark</span>
+            </div>
+        </div>
 
         <!-- Status Display -->
         <div id="statusDisplay" class="hidden"></div>
@@ -418,6 +587,33 @@
 
     <script>
         let isInitialized = false;
+
+        // Theme management
+        function initializeTheme() {
+            const savedTheme = localStorage.getItem('getgit-theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeToggle(savedTheme);
+        }
+
+        function toggleTheme() {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('getgit-theme', newTheme);
+            updateThemeToggle(newTheme);
+        }
+
+        function updateThemeToggle(theme) {
+            const themeIcon = document.getElementById('themeIcon');
+            const themeLabel = document.getElementById('themeLabel');
+            if (theme === 'dark') {
+                themeIcon.textContent = '☀️';
+                themeLabel.textContent = 'Light';
+            } else {
+                themeIcon.textContent = '🌙';
+                themeLabel.textContent = 'Dark';
+            }
+        }
 
         function showStatus(message, type) {
             const statusDiv = document.getElementById('statusDisplay');
@@ -709,6 +905,9 @@
 
         // Check initial status on page load
         window.addEventListener('DOMContentLoaded', async () => {
+            // Initialize theme first
+            initializeTheme();
+            
             try {
                 const response = await fetch('/status');
                 const data = await response.json();
