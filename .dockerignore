@@ -38,6 +38,8 @@ output/
 results/
 .rag_cache/
 source_repo/
+data/
+models/
 
 # Documentation (already in image)
 documentation.md
