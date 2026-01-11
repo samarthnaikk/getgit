@@ -66,7 +66,7 @@ Please provide a clear, concise answer based on the context above. If the contex
     return prompt
 
 
-def query_llm(prompt: str, model_name: str = "gemini-2.0-flash-exp", 
+def query_llm(prompt: str, model_name: str = "gemini-2.5-flash", 
               api_key: Optional[str] = None) -> str:
     """
     Sends the prompt to an LLM and returns the generated response.
@@ -76,7 +76,7 @@ def query_llm(prompt: str, model_name: str = "gemini-2.0-flash-exp",
     
     Args:
         prompt: The formatted prompt to send to the LLM
-        model_name: Name of the Gemini model to use (default: gemini-2.0-flash-exp)
+        model_name: Name of the Gemini model to use (default: gemini-2.5-flash)
         api_key: Optional API key. If not provided, loads from GEMINI_API_KEY env var
     
     Returns:
@@ -111,23 +111,21 @@ def query_llm(prompt: str, model_name: str = "gemini-2.0-flash-exp",
     
     # Configure the generativeai library
     genai.configure(api_key=api_key)
-    
+    # Always use gemini-2.5-flash as the model name
+    model_name = "gemini-2.5-flash"
     try:
         # Initialize the model
         model = genai.GenerativeModel(model_name)
-        
         # Generate response
         response = model.generate_content(prompt)
-        
         # Extract and return the text
         return response.text
-    
     except Exception as e:
         raise Exception(f"Failed to generate response from LLM: {str(e)}")
 
 
 def generate_response(query: str, context_chunks: List[str], 
-                      model_name: str = "gemini-2.0-flash-exp",
+                      model_name: str = "gemini-2.5-flash",
                       api_key: Optional[str] = None) -> str:
     """
     High-level function that builds the prompt, queries the LLM,
@@ -140,7 +138,7 @@ def generate_response(query: str, context_chunks: List[str],
     Args:
         query: The user's natural language question
         context_chunks: List of retrieved text chunks from the repository
-        model_name: Name of the Gemini model to use (default: gemini-2.0-flash-exp)
+        model_name: Name of the Gemini model to use (default: gemini-2.5-flash)
         api_key: Optional API key. If not provided, loads from GEMINI_API_KEY env var
     
     Returns:
@@ -162,6 +160,5 @@ def generate_response(query: str, context_chunks: List[str],
     """
     # Build the prompt from query and context
     prompt = build_prompt(query, context_chunks)
-    
-    # Query the LLM and return response
-    return query_llm(prompt, model_name=model_name, api_key=api_key)
+    # Always use gemini-2.5-flash as the model name
+    return query_llm(prompt, model_name="gemini-2.5-flash", api_key=api_key)

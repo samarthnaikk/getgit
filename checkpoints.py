@@ -175,7 +175,7 @@ def evaluate_checkpoint(
     retriever: Retriever,
     use_llm: bool = True,
     api_key: Optional[str] = None,
-    model_name: str = "gemini-2.0-flash-exp"
+    model_name: str = "gemini-2.5-flash"
 ) -> CheckpointResult:
     """
     Evaluate a single checkpoint and return result details.
@@ -318,7 +318,7 @@ def run_checkpoints(
     retriever: Retriever,
     use_llm: bool = True,
     api_key: Optional[str] = None,
-    model_name: str = "gemini-2.0-flash-exp",
+    model_name: str = "gemini-2.5-flash",
     stop_on_failure: bool = False
 ) -> List[CheckpointResult]:
     """

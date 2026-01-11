@@ -174,7 +174,7 @@ def answer_query(
     top_k: int = 5,
     use_llm: bool = True,
     api_key: Optional[str] = None,
-    model_name: str = "gemini-2.0-flash-exp"
+    model_name: str = "gemini-2.5-flash"
 ) -> Dict[str, Any]:
     """
     Retrieve relevant context and generate an LLM response for the query.
