@@ -23,9 +23,10 @@ COPY . .
 # Set environment variables
 ENV FLASK_ENV=production
 ENV PYTHONUNBUFFERED=1
+ENV PORT=5001
 
-# Expose port 5000
-EXPOSE 5000
+# Expose port 5001
+EXPOSE 5001
 
 # Run the application
 CMD ["python", "server.py"]

@@ -12,6 +12,7 @@ from typing import Optional, List, Dict, Any
 from pathlib import Path
 
 from clone_repo import clone_repo
+from repo_manager import RepositoryManager
 from rag import (
     RepositoryChunker,
     SimpleEmbedding,
@@ -61,6 +62,11 @@ def initialize_repository(repo_url: str, local_path: str = "source_repo") -> str
     """
     Clone or load the repository and prepare it for analysis.
     
+    This function now includes repository persistence and validation:
+    - Checks if the repository URL has changed
+    - Cleans up old data if a new repository is provided
+    - Stores the current repository URL for future validation
+    
     Args:
         repo_url: GitHub repository URL to clone
         local_path: Local path where repository will be stored
@@ -74,6 +80,20 @@ def initialize_repository(repo_url: str, local_path: str = "source_repo") -> str
     logger.info(f"Initializing repository from {repo_url}")
     
     try:
+        # Initialize repository manager
+        repo_manager = RepositoryManager(
+            data_dir="data",
+            repo_dir=local_path,
+            cache_dir=".rag_cache"
+        )
+        
+        # Check if we need to reset (different repository URL)
+        reset_performed = repo_manager.prepare_for_new_repo(repo_url)
+        
+        if reset_performed:
+            logger.info("Repository reset performed, will clone fresh copy")
+        
+        # Clone or reuse existing repository
         if os.path.exists(local_path):
             logger.info(f"Repository already exists at {local_path}, using existing copy")
             logger.debug(f"Skipping clone for existing repository at {local_path}")
