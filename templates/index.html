@@ -44,6 +44,7 @@
             --empty-state-text: #718096;
             --toggle-bg: #cbd5e0;
             --toggle-active: #667eea;
+            --button-secondary-hover-bg: #cbd5e0;
         }
 
         [data-theme="dark"] {
@@ -84,6 +85,7 @@
             --empty-state-text: #71717a;
             --toggle-bg: #374151;
             --toggle-active: #667eea;
+            --button-secondary-hover-bg: #374151;
         }
 
         * {
@@ -258,7 +260,7 @@
         }
         
         button.secondary:hover:not(:disabled) {
-            background: var(--toggle-bg);
+            background: var(--button-secondary-hover-bg);
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         }
         
@@ -431,7 +433,6 @@
             height: 18px;
             margin-right: 10px;
             cursor: pointer;
-            accent-color: var(--button-gradient-start);
         }
         
         .checkbox-group label {
