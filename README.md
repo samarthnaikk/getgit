@@ -117,3 +117,5 @@ This project is licensed under the MIT License. See the LICENSE file for details
 ## Documentation
 
 For detailed technical documentation, architecture information, and API reference, see [documentation.md](documentation.md).
+
+Can be used in multiple use cases
